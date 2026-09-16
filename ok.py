@@ -4,7 +4,7 @@ Title: Flash Flood Prediction System for Hilly Regions using Multi-Source Data
 Theme: Disaster Management | Category: Software
 Team Name: Error404 | Team ID: R315-217
 
-AquaSentinel: Advanced Command & Early Warning Platform (Next-Gen UI Edition)
+AquaSentinel: National Flash Flood Early Warning & Hydrometeorological Command System
 """
 
 import streamlit as st
@@ -333,15 +333,15 @@ class MLFloodRiskEngine:
             
             if risk_score_pct >= 60.0 or sensor_diff_count >= 2:
                 risk_state = "RED (CRITICAL)"
-                color = "#FF2E63"
+                color = "#EF4444"
                 risk_level = 2
             elif risk_score_pct >= 30.0 or sensor_diff_count == 1:
                 risk_state = "WATCH (ELEVATED)"
-                color = "#FF9900"
+                color = "#F59E0B"
                 risk_level = 1
             else:
                 risk_state = "GREEN (SAFE)"
-                color = "#00E676"
+                color = "#10B981"
                 risk_level = 0
             
             feature_impacts = {
@@ -375,21 +375,21 @@ class GISAssetExposureEngine:
         self.assets = [
             {
                 'id': 'AST-01',
-                'name': 'NH-3 Chandigarh-Manali Highway (Km 210-225)',
+                'name': 'NH-3 Chandigarh-Manali National Highway (Km 210-225)',
                 'type': 'highway',
                 'lat': 32.11,
                 'lon': 77.13,
                 'nearest_hru': 'HRU-03',
-                'criticality': 'CRITICAL (Life-line corridor)'
+                'criticality': 'CRITICAL (Strategic Arterial Route)'
             },
             {
                 'id': 'AST-02',
-                'name': 'Beas Valley Suspension Bridge (Kullu North)',
+                'name': 'Beas Valley Truss Suspension Bridge (Kullu North)',
                 'type': 'bridge',
                 'lat': 32.08,
                 'lon': 77.15,
                 'nearest_hru': 'HRU-04',
-                'criticality': 'VITAL (River crossing)'
+                'criticality': 'VITAL (Primary River Crossing)'
             },
             {
                 'id': 'AST-03',
@@ -398,16 +398,16 @@ class GISAssetExposureEngine:
                 'lat': 32.02,
                 'lon': 77.17,
                 'nearest_hru': 'Village-A',
-                'criticality': 'HUMAN LIVES (Evacuation priority)'
+                'criticality': 'CIVILIAN POPULATION (Immediate Evacuation Target)'
             },
             {
                 'id': 'AST-04',
-                'name': 'Larji Hydroelectric Reservoir & Sluice Gates',
+                'name': 'Larji Hydroelectric Project & Spillway Barrage',
                 'type': 'dam',
                 'lat': 31.98,
                 'lon': 77.19,
                 'nearest_hru': 'Village-A',
-                'criticality': 'STRATEGIC (Grid & flood buffering)'
+                'criticality': 'STRATEGIC ASSET (Hydro Generation & Sluice Gate Control)'
             }
         ]
     
@@ -421,19 +421,19 @@ class GISAssetExposureEngine:
             
             if 'RED' in risk_state:
                 exposure_level = 'CRITICAL INUNDATION'
-                badge_color = '#FF2E63'
+                badge_color = '#EF4444'
                 lead_time_min = max(15, 60 - int(q_flow * 0.8))
-                action_required = '🚨 Immediate Evacuation & Traffic Blockade'
+                action_required = 'Mandatory Civilian Evacuation & Complete Highway Closure'
             elif 'WATCH' in risk_state:
                 exposure_level = 'MODERATE WATCH'
-                badge_color = '#FF9900'
+                badge_color = '#F59E0B'
                 lead_time_min = max(45, 120 - int(q_flow * 0.5))
-                action_required = '⚠️ Pre-Alert Field Teams & Emergency Standby'
+                action_required = 'Issue Pre-Alert to SDRF/Traffic Police; Monitor River Gauges'
             else:
                 exposure_level = 'NOMINAL / SAFE'
-                badge_color = '#00E676'
+                badge_color = '#10B981'
                 lead_time_min = 240
-                action_required = '✅ Routine Baseline Monitoring'
+                action_required = 'Maintain Standard Routine Telemetry Sweep'
             
             evaluated_assets.append({
                 **ast,
@@ -665,94 +665,207 @@ class RunoffCalculator:
         return results
 
 # ============================================================================
-# PHASE 6: STREAMLIT COMMAND & EARLY WARNING CONSOLE (NEXT-GEN FRONTEND)
+# PHASE 6: STREAMLIT COMMAND & EARLY WARNING CONSOLE (GOVERNMENT OPS CENTER THEME)
 # ============================================================================
 
 st.set_page_config(
-    page_title="AquaSentinel • SIH26192 Command Hub",
-    page_icon="🌊",
+    page_title="AquaSentinel | National Flash Flood Early Warning System",
+    page_icon="🛡️",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Custom High-Tech Command Center CSS
+# Comprehensive CSS to eliminate default white background and provide an authentic Government Ops Console look
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
+    /* SYSTEM FONTS & HIGH-SPECIFICITY BASE STYLES */
+    @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;600;700&display=swap');
     
-    html, body, [class*="css"] {
-        font-family: 'Inter', sans-serif;
+    html, body, .stApp, 
+    [data-testid="stAppViewContainer"], 
+    [data-testid="stHeader"], 
+    [data-testid="stToolbar"], 
+    .main, .block-container {
+        background-color: #0B0F17 !important;
+        color: #F3F4F6 !important;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
     }
     
-    /* Global Glassmorphism Cards */
-    .glass-card {
-        background: rgba(18, 26, 43, 0.75);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 12px;
-        padding: 18px 20px;
-        margin-bottom: 12px;
-        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-        transition: transform 0.2s ease, border-color 0.2s ease;
+    .block-container {
+        padding-top: 1.5rem !important;
+        padding-bottom: 2rem !important;
+        max-width: 100% !important;
     }
-    .glass-card:hover {
-        border-color: rgba(0, 230, 118, 0.3);
-        transform: translateY(-2px);
+
+    /* SIDEBAR FORCED DARK STYLING */
+    [data-testid="stSidebar"], 
+    [data-testid="stSidebarContent"], 
+    section[data-testid="stSidebar"] {
+        background-color: #0F172A !important;
+        border-right: 1px solid #1E293B !important;
     }
     
-    /* SIH Header Banner */
-    .sih-header {
-        background: linear-gradient(135deg, #09122C 0%, #872341 50%, #BE3144 100%);
-        padding: 16px 24px;
-        border-radius: 14px;
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        box-shadow: 0 10px 40px rgba(190, 49, 68, 0.25);
-        margin-bottom: 18px;
+    [data-testid="stSidebar"] * {
+        color: #E2E8F0 !important;
     }
-    
-    /* Glowing KPI Cards */
-    .kpi-box {
-        background: #0D1322;
-        border-radius: 10px;
+
+    /* REMOVE UNNECESSARY WHITESPACE & BLUR EFFECTS */
+    div[data-testid="stVerticalBlock"] {
+        gap: 0.8rem;
+    }
+
+    /* INSTITUTIONAL TOP BANNER */
+    .ndma-banner {
+        background-color: #0F172A;
+        border: 1px solid #1E293B;
+        border-left: 4px solid #0284C7;
+        border-radius: 6px;
         padding: 14px 18px;
-        border-left: 4px solid #00E676;
-    }
-    .kpi-box.critical {
-        border-left: 4px solid #FF2E63;
-        box-shadow: 0 0 20px rgba(255, 46, 99, 0.2);
-    }
-    .kpi-box.watch {
-        border-left: 4px solid #FF9900;
+        margin-bottom: 16px;
     }
     
-    /* Tab Styling */
+    .ndma-meta {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #94A3B8;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .ndma-title {
+        font-size: 20px;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        color: #F8FAFC;
+        margin: 4px 0 2px 0;
+    }
+    
+    .ndma-sub {
+        font-size: 12px;
+        color: #CBD5E1;
+    }
+
+    /* EXECUTIVE KPI METRIC CARDS */
+    .kpi-card {
+        background-color: #111827;
+        border: 1px solid #1E293B;
+        border-radius: 6px;
+        padding: 12px 16px;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+    
+    .kpi-card-header {
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #94A3B8;
+        margin-bottom: 4px;
+    }
+    
+    .kpi-card-value {
+        font-family: 'Roboto Mono', Consolas, monospace;
+        font-size: 22px;
+        font-weight: 700;
+        color: #F8FAFC;
+    }
+    
+    .kpi-card-sub {
+        font-size: 11px;
+        color: #64748B;
+        margin-top: 4px;
+    }
+    
+    /* ALERT STATUS BADGES */
+    .badge-green {
+        color: #10B981 !important;
+        border-left: 3px solid #10B981;
+    }
+    .badge-amber {
+        color: #F59E0B !important;
+        border-left: 3px solid #F59E0B;
+    }
+    .badge-red {
+        color: #EF4444 !important;
+        border-left: 3px solid #EF4444;
+    }
+
+    /* FORM WIDGETS & INPUTS */
+    div[data-baseweb="select"] > div,
+    div[data-baseweb="input"] > div,
+    input, textarea, select {
+        background-color: #1E293B !important;
+        color: #F8FAFC !important;
+        border: 1px solid #334155 !important;
+        border-radius: 4px !important;
+    }
+    
+    /* SLIDERS */
+    [data-testid="stSlider"] * {
+        color: #E2E8F0 !important;
+    }
+
+    /* BUTTONS */
+    .stButton > button {
+        background-color: #1E293B !important;
+        color: #F8FAFC !important;
+        border: 1px solid #334155 !important;
+        border-radius: 4px !important;
+        font-weight: 600 !important;
+        font-size: 13px !important;
+        padding: 6px 14px !important;
+        transition: background-color 0.15s ease, border-color 0.15s ease;
+    }
+    .stButton > button:hover {
+        background-color: #334155 !important;
+        border-color: #0284C7 !important;
+        color: #FFFFFF !important;
+    }
+    
+    /* TABS */
     .stTabs [data-baseweb="tab-list"] {
-        gap: 10px;
-        background: transparent;
+        background-color: #0F172A !important;
+        border-radius: 6px;
+        padding: 4px;
+        border: 1px solid #1E293B !important;
+        gap: 6px;
     }
     .stTabs [data-baseweb="tab"] {
-        padding: 10px 20px;
-        border-radius: 8px;
-        font-weight: 600;
-        background: rgba(255, 255, 255, 0.03);
-        border: 1px solid rgba(255, 255, 255, 0.05);
-        transition: all 0.2s ease;
-    }
-    .stTabs [data-baseweb="tab"]:hover {
-        background: rgba(255, 255, 255, 0.08);
+        background: transparent !important;
+        border: none !important;
+        color: #94A3B8 !important;
+        font-size: 13px !important;
+        font-weight: 600 !important;
+        padding: 8px 14px !important;
+        border-radius: 4px !important;
     }
     .stTabs [aria-selected="true"] {
-        background: linear-gradient(90deg, rgba(0, 230, 118, 0.2) 0%, rgba(0, 230, 118, 0.05) 100%) !important;
-        border-color: #00E676 !important;
-        color: #00E676 !important;
+        background-color: #1E293B !important;
+        color: #38BDF8 !important;
+        border-bottom: 2px solid #0284C7 !important;
     }
-    
-    /* Code/Mono font for metrics */
-    .mono-num {
-        font-family: 'JetBrains Mono', monospace;
-        font-size: 24px;
-        font-weight: 700;
+
+    /* DATA TABLES */
+    [data-testid="stDataFrame"], table {
+        background-color: #111827 !important;
+        color: #F8FAFC !important;
+        border: 1px solid #1E293B !important;
+        border-radius: 6px !important;
+    }
+
+    /* INSTITUTIONAL PANELS & CARDS */
+    .ops-panel {
+        background-color: #111827;
+        border: 1px solid #1E293B;
+        border-radius: 6px;
+        padding: 16px;
+        margin-bottom: 12px;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -868,44 +981,48 @@ if st.session_state.steps_generated == 0:
     step_simulation(num_steps=5)
 
 # ----------------------------------------------------------------------------
-# SIDEBAR CONTROLS & API SETTINGS (POLISHED)
+# SIDEBAR CONTROLS & CONFIGURATION
 # ----------------------------------------------------------------------------
 
 with st.sidebar:
     st.markdown("""
-    <div style="text-align: center; padding: 10px 0 16px 0;">
-        <img src="https://img.icons8.com/fluency/96/tsunami.png" width="60" style="margin-bottom: 8px;"/>
-        <h2 style="margin: 0; font-size: 22px; font-weight: 800; letter-spacing: -0.5px;">AQUASENTINEL</h2>
-        <span style="font-size: 11px; background: rgba(0, 230, 118, 0.15); color: #00E676; padding: 3px 8px; border-radius: 4px; font-weight: 600;">
-            SIH26192 • TEAM ERROR404
-        </span>
+    <div style="border-bottom: 1px solid #1E293B; padding-bottom: 12px; margin-bottom: 14px;">
+        <div style="font-size: 10px; font-weight: 700; color: #38BDF8; letter-spacing: 0.1em; text-transform: uppercase;">
+            OPERATIONAL COMMAND
+        </div>
+        <div style="font-size: 18px; font-weight: 800; color: #F8FAFC; margin-top: 2px;">
+            AQUASENTINEL
+        </div>
+        <div style="font-size: 11px; color: #94A3B8;">
+            SIH26192 • Error404 (R315-217)
+        </div>
     </div>
     """, unsafe_allow_html=True)
     
     # 1. OPERATION MODE
-    st.markdown("### 🌐 Data Ingestion Mode")
+    st.markdown("##### 1. Data Ingestion Stream")
     mode_choice = st.radio(
-        "Mode Selection",
+        "Ingestion Mode",
         ["Live Real-Time API", "Hybrid (Live + Surge)", "Synthetic Simulation"],
         index=["Live Real-Time API", "Hybrid (Live + Surge)", "Synthetic Simulation"].index(st.session_state.mode),
         label_visibility="collapsed"
     )
     st.session_state.mode = mode_choice
     
-    # 2. API & CATCHMENT CONFIGURATION
-    with st.expander("⚙️ API & Catchment Settings", expanded=(mode_choice != "Synthetic Simulation")):
+    # 2. API & BASIN SELECTION
+    with st.expander("Telemetry & Basin Setup", expanded=(mode_choice != "Synthetic Simulation")):
         provider_selected = st.selectbox(
-            "API Provider",
+            "API Service",
             ["Open-Meteo", "OpenWeatherMap", "WeatherAPI.com"],
             index=["Open-Meteo", "OpenWeatherMap", "WeatherAPI.com"].index(st.session_state.api_provider_name)
         )
         st.session_state.api_provider_name = provider_selected
         
         api_key_input = st.text_input(
-            "API Key (Optional for Open-Meteo)",
+            "API Access Key",
             value=st.session_state.api_key,
             type="password",
-            help="Open-Meteo is free with no key required."
+            help="Open-Meteo requires no key (free open access)."
         )
         st.session_state.api_key = api_key_input
         st.session_state.live_provider.provider = provider_selected
@@ -923,18 +1040,18 @@ with st.sidebar:
             step_simulation(5)
             st.rerun()
 
-    # Status Pill
+    # Status indicator
     if mode_choice != "Synthetic Simulation":
-        st.success(f"● {st.session_state.live_provider.last_status}")
+        st.caption(f"Status: **{st.session_state.live_provider.last_status}**")
     else:
-        st.info("● Local Synthetic Physics Engine Active")
+        st.caption("Status: **Local Hydrological Simulation Active**")
 
-    st.divider()
+    st.markdown("---")
     
-    # 3. SCENARIO / HAZARD INJECTION
-    st.markdown("### ⚡ Hazard Surge Simulator")
+    # 3. SCENARIO / CONVECTIVE SURGE INJECTION
+    st.markdown("##### 2. Atmospheric Surge Injection")
     preset_choice = st.selectbox(
-        "Simulation Preset",
+        "Event Profile",
         ["Normal Day", "Sudden Cloudburst", "Flash Flood Building", "Sensor Glitch (Single Sensor Fault)"],
         index=["Normal Day", "Sudden Cloudburst", "Flash Flood Building", "Sensor Glitch (Single Sensor Fault)"].index(st.session_state.scenario_preset)
     )
@@ -943,21 +1060,21 @@ with st.sidebar:
         st.session_state.scenario_preset = preset_choice
         st.session_state.scenario_intensity = 0.0 if preset_choice == "Normal Day" else (0.9 if preset_choice == "Sudden Cloudburst" else 0.6)
     
-    intensity = st.slider("Hazard Surge Intensity", 0.0, 1.0, float(st.session_state.scenario_intensity), 0.05)
+    intensity = st.slider("Surge Scaling Factor", 0.0, 1.0, float(st.session_state.scenario_intensity), 0.05)
     st.session_state.scenario_intensity = intensity
     
     col_s1, col_s2 = st.columns(2)
     with col_s1:
-        btn_label = "⚡ Fetch Live" if mode_choice == "Live Real-Time API" else "▶ Step (+1m)"
+        btn_label = "Fetch Cycle" if mode_choice == "Live Real-Time API" else "+1m Step"
         if st.button(btn_label, use_container_width=True):
             step_simulation(1)
             st.rerun()
     with col_s2:
-        if st.button("⏩ Advance 10m", use_container_width=True):
+        if st.button("+10m Step", use_container_width=True):
             step_simulation(10)
             st.rerun()
             
-    if st.button("🔄 Reset Telemetry", use_container_width=True):
+    if st.button("Reset Telemetry State", use_container_width=True):
         st.session_state.simulator = TelemetrySimulator(zones=st.session_state.zones)
         st.session_state.cascade = HRUCascade()
         st.session_state.cascade.create_catchment(st.session_state.catchment_preset)
@@ -969,30 +1086,37 @@ with st.sidebar:
         step_simulation(5)
         st.rerun()
         
-    st.caption(f"⏱️ Telemetry Clock: **+{st.session_state.steps_generated} mins**")
+    st.caption(f"Elapsed System Time: **+{st.session_state.steps_generated} mins**")
 
 # ----------------------------------------------------------------------------
-# HEADER & COMMAND CENTER BANNER
+# INSTITUTIONAL HEADER & COMMAND CENTER BANNER
 # ----------------------------------------------------------------------------
 
 st.markdown("""
-<div class="sih-header">
-    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+<div class="ndma-banner">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 10px;">
         <div>
-            <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: #FFA726; font-weight: 700; margin-bottom: 2px;">
-                NATIONAL DISASTER MANAGEMENT PLATFORM • SMART INDIA HACKATHON 2026
+            <div class="ndma-meta">
+                <span>GOVERNMENT OF INDIA</span>
+                <span>•</span>
+                <span>NATIONAL DISASTER MANAGEMENT PLATFORM</span>
+                <span>•</span>
+                <span>CWC / IMD PROTOCOL</span>
             </div>
-            <h2 style="margin: 0; color: #FFFFFF; font-size: 24px; font-weight: 800; letter-spacing: -0.5px;">
-                🌊 AquaSentinel — Multi-Source Flash Flood Early Warning System
-            </h2>
-            <div style="color: #E0E0E0; font-size: 13px; margin-top: 4px;">
-                <b>PS ID:</b> SIH26192 • <b>Theme:</b> Disaster Management • <b>Team:</b> Error404 (ID: R315-217)
+            <div class="ndma-title">
+                AquaSentinel — Integrated Flash Flood Prediction & Early Warning System
+            </div>
+            <div class="ndma-sub">
+                Problem Statement ID: <b>SIH26192</b> &nbsp;|&nbsp; Theme: <b>Disaster Management</b> &nbsp;|&nbsp; Team: <b>Error404</b> (ID: <b>R315-217</b>)
             </div>
         </div>
-        <div>
-            <span style="background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.2); color: #FFF; padding: 6px 14px; border-radius: 8px; font-weight: 700; font-size: 13px;">
-                🟢 13+ HILL STATES PROTOCOL
-            </span>
+        <div style="text-align: right;">
+            <div style="font-size: 11px; font-weight: 700; color: #38BDF8; font-family: 'Roboto Mono', monospace;">
+                ACTIVE SECTOR: BEAS DRAINAGE BASIN (HP)
+            </div>
+            <div style="font-size: 11px; color: #94A3B8; margin-top: 2px;">
+                LATENCY: 42ms | SAMPLING: 60s REAL-TIME
+            </div>
         </div>
     </div>
 </div>
@@ -1008,67 +1132,75 @@ max_risk = max((r.get('risk_level', 0) for r in st.session_state.risk_scores.val
 active_reds = sum(1 for r in st.session_state.risk_scores.values() if r.get('risk_level') == 2)
 total_q = sum(r.get('discharge_m3_s', 0.0) for r in st.session_state.runoff_results.values())
 min_lead_time = min((a.get('lead_time_min', 240) for a in st.session_state.asset_exposures), default=240)
+critical_ast = sum(1 for a in st.session_state.asset_exposures if 'CRITICAL' in a.get('exposure_level', ''))
 
 with col_k1:
-    kpi_cls = "critical" if max_risk == 2 else ("watch" if max_risk == 1 else "")
-    badge_label = "🔴 CRITICAL ALERT" if max_risk == 2 else ("🟡 WATCH" if max_risk == 1 else "🟢 ALL NOMINAL")
+    kpi_cls = "badge-red" if max_risk == 2 else ("badge-amber" if max_risk == 1 else "badge-green")
+    status_label = "STAGE-2 WARNING (CRITICAL)" if max_risk == 2 else ("STAGE-1 WATCH (ELEVATED)" if max_risk == 1 else "STAGE-0 ALL NOMINAL")
     st.markdown(f"""
-    <div class="kpi-box {kpi_cls}">
-        <div style="font-size: 12px; color: #8F9CAE; text-transform: uppercase; font-weight: 600;">Threat Status</div>
-        <div class="mono-num" style="color: {'#FF2E63' if max_risk==2 else ('#FF9900' if max_risk==1 else '#00E676')};">{badge_label}</div>
-        <div style="font-size: 11px; color: #B0BEC5; margin-top: 4px;">{active_reds} Drainage Reaches in RED</div>
+    <div class="kpi-card {kpi_cls}">
+        <div class="kpi-card-header">Basin Threat Stage</div>
+        <div class="kpi-card-value" style="font-size: 16px; color: {'#EF4444' if max_risk==2 else ('#F59E0B' if max_risk==1 else '#10B981')};">
+            {status_label}
+        </div>
+        <div class="kpi-card-sub">{active_reds} Drainage Reaches in High Risk</div>
     </div>
     """, unsafe_allow_html=True)
 
 with col_k2:
     st.markdown(f"""
-    <div class="kpi-box">
-        <div style="font-size: 12px; color: #8F9CAE; text-transform: uppercase; font-weight: 600;">Total Basin Discharge (Q)</div>
-        <div class="mono-num" style="color: #00E5FF;">{total_q:.1f} <span style="font-size: 14px;">m³/s</span></div>
-        <div style="font-size: 11px; color: #B0BEC5; margin-top: 4px;">SCS-CN Runoff Model</div>
+    <div class="kpi-card">
+        <div class="kpi-card-header">Estimated Peak Basin Discharge (Q)</div>
+        <div class="kpi-card-value" style="color: #38BDF8;">
+            {total_q:.1f} <span style="font-size: 13px; font-weight: 500;">m³/s</span>
+        </div>
+        <div class="kpi-card-sub">SCS-CN Calibrated Runoff Hydrograph</div>
     </div>
     """, unsafe_allow_html=True)
 
 with col_k3:
     st.markdown(f"""
-    <div class="kpi-box {'critical' if min_lead_time <= 45 else ''}">
-        <div style="font-size: 12px; color: #8F9CAE; text-transform: uppercase; font-weight: 600;">Actionable Evacuation Lead Time</div>
-        <div class="mono-num" style="color: {'#FF2E63' if min_lead_time<=45 else '#00E676'};">{min_lead_time} <span style="font-size: 14px;">mins</span></div>
-        <div style="font-size: 11px; color: #B0BEC5; margin-top: 4px;">Downstream Settlement Window</div>
+    <div class="kpi-card {'badge-red' if min_lead_time <= 45 else ''}">
+        <div class="kpi-card-header">Actionable Evacuation Lead Time (T_lead)</div>
+        <div class="kpi-card-value" style="color: {'#EF4444' if min_lead_time<=45 else '#10B981'};">
+            {min_lead_time} <span style="font-size: 13px; font-weight: 500;">mins</span>
+        </div>
+        <div class="kpi-card-sub">Downstream Vulnerable Settlements Window</div>
     </div>
     """, unsafe_allow_html=True)
 
 with col_k4:
-    critical_ast = sum(1 for a in st.session_state.asset_exposures if 'CRITICAL' in a.get('exposure_level', ''))
     st.markdown(f"""
-    <div class="kpi-box {'critical' if critical_ast > 0 else ''}">
-        <div style="font-size: 12px; color: #8F9CAE; text-transform: uppercase; font-weight: 600;">Exposed Critical Assets</div>
-        <div class="mono-num" style="color: {'#FF2E63' if critical_ast>0 else '#00E676'};">{critical_ast} <span style="font-size: 14px;">High Risk</span></div>
-        <div style="font-size: 11px; color: #B0BEC5; margin-top: 4px;">NH-3 Highway & Bridges</div>
+    <div class="kpi-card {'badge-red' if critical_ast > 0 else ''}">
+        <div class="kpi-card-header">Critical Infrastructure Exposure</div>
+        <div class="kpi-card-value" style="color: {'#EF4444' if critical_ast>0 else '#10B981'};">
+            {critical_ast} <span style="font-size: 13px; font-weight: 500;">Assets at Risk</span>
+        </div>
+        <div class="kpi-card-sub">NH-3 Corridor, Bridges & Barrages</div>
     </div>
     """, unsafe_allow_html=True)
 
-st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
+st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
 
 # ----------------------------------------------------------------------------
-# TABS INTERFACE (NEXT-GEN FRONTEND)
+# OPERATIONAL TABS INTERFACE
 # ----------------------------------------------------------------------------
 
 tab_gis, tab_ml_risk, tab_assets, tab_telemetry, tab_memory, tab_ndrf = st.tabs([
-    "🗺️ Interactive GIS Risk Map",
-    "🤖 XGBoost AI Risk Engine",
-    "🛣️ Critical Asset Exposure",
-    "📡 Multi-Source Telemetry",
-    "🧠 Historical Memory Layer",
-    "🚨 NDRF Early Warning Dispatch"
+    "GIS Inundation Map",
+    "ML Risk Scoring Engine",
+    "Asset Exposure & Impact",
+    "Telemetry Streams",
+    "Historical Analog Memory",
+    "NDRF Dispatch & SOP"
 ])
 
 # ----------------------------------------------------------------------------
-# TAB 1: INTERACTIVE GIS RISK MAP
+# TAB 1: INTERACTIVE GIS INUNDATION & TOPOGRAPHIC RISK MAP
 # ----------------------------------------------------------------------------
 with tab_gis:
-    st.subheader("Spatial Risk Grid & Critical Infrastructure Overlay")
-    st.markdown("Integrates multi-source telemetry, DEM slope gradients, and asset exposure into an interactive GIS map.")
+    st.markdown("##### Catchment Topography, Hydrographic Routing & Infrastructure Overlay")
+    st.caption("Fuses elevation digital terrain models (DEM), topological drainage cascades, and real-time sensor node telemetry.")
     
     cascade = st.session_state.cascade
     nodes = cascade.get_node_details()
@@ -1082,13 +1214,13 @@ with tab_gis:
         folium.TileLayer(
             tiles='https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
             attr='Esri World Imagery',
-            name='🛰️ Satellite View'
+            name='Satellite Imagery'
         ).add_to(m)
         
         folium.TileLayer(
             tiles='https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
             attr='OpenTopoMap',
-            name='⛰️ Topo Terrain (DEM)'
+            name='DEM Topographic Contours'
         ).add_to(m)
         
         # Draw flow channels
@@ -1097,15 +1229,15 @@ with tab_gis:
             v_node = cascade.node_props[v]
             lag = data.get('lag_minutes', 20)
             u_risk = cascade.risk_propagated.get(u, {}).get('risk_level', 0)
-            line_color = '#00E676' if u_risk == 0 else ('#FF9900' if u_risk == 1 else '#FF2E63')
+            line_color = '#10B981' if u_risk == 0 else ('#F59E0B' if u_risk == 1 else '#EF4444')
             
             folium.PolyLine(
                 locations=[[u_node['lat'], u_node['lon']], [v_node['lat'], v_node['lon']]],
                 color=line_color,
-                weight=5,
-                opacity=0.9,
-                dash_array='6, 10' if u_risk > 0 else None,
-                tooltip=f"Drainage Channel {u} ➔ {v} (Routing Lag: {lag} min)"
+                weight=4,
+                opacity=0.85,
+                dash_array='6, 8' if u_risk > 0 else None,
+                tooltip=f"Drainage Reach {u} ➔ {v} (Routing Lag: {lag} min)"
             ).add_to(m)
         
         # Add Nodes
@@ -1115,12 +1247,14 @@ with tab_gis:
             icon_name = 'home' if n['type'] == 'settlement' else 'tint'
             
             popup_html = f"""
-            <div style="font-family: Arial; min-width: 190px;">
-                <h4 style="margin: 0 0 5px 0;">{n['name']} ({n['id']})</h4>
-                <b>Elevation (DEM):</b> {n['elevation_m']} m<br>
-                <b>Slope Angle:</b> {n['slope_deg']}°<br>
-                <b>Threat State:</b> <span style="color:{color_name}; font-weight:bold;">{n['risk_state']}</span><br>
-                <b>Accumulated Flow:</b> {n['total_discharge']} m³/s
+            <div style="font-family: Arial, sans-serif; min-width: 180px; color: #111827;">
+                <div style="font-weight: 700; font-size: 14px; margin-bottom: 4px;">{n['name']} ({n['id']})</div>
+                <div style="font-size: 12px; line-height: 1.4;">
+                    <b>DEM Elevation:</b> {n['elevation_m']} m<br>
+                    <b>Slope Angle:</b> {n['slope_deg']}°<br>
+                    <b>Status:</b> <span style="font-weight:700; color:{'#DC2626' if r_level==2 else ('#D97706' if r_level==1 else '#16A34A')};">{n['risk_state']}</span><br>
+                    <b>Discharge:</b> {n['total_discharge']} m³/s
+                </div>
             </div>
             """
             
@@ -1135,19 +1269,19 @@ with tab_gis:
                 folium.Circle(
                     location=[n['lat'], n['lon']],
                     radius=1200,
-                    color='#FF2E63',
+                    color='#EF4444',
                     fill=True,
-                    fill_opacity=0.3,
+                    fill_opacity=0.25,
                     popup=f"Critical Inundation Hazard Buffer: {n['id']}"
                 ).add_to(m)
         
         # Add Assets
-        for ast in st.session_state.asset_exposures:
-            ast_color = 'red' if 'CRITICAL' in ast['exposure_level'] else ('orange' if 'MODERATE' in ast['exposure_level'] else 'blue')
+        for ast_item in st.session_state.asset_exposures:
+            ast_color = 'red' if 'CRITICAL' in ast_item['exposure_level'] else ('orange' if 'MODERATE' in ast_item['exposure_level'] else 'blue')
             folium.Marker(
-                location=[ast['lat'], ast['lon']],
-                popup=folium.Popup(f"<b>{ast['name']}</b><br>Type: {ast['type'].upper()}<br>Exposure: <b>{ast['exposure_level']}</b><br>Lead Time: {ast['lead_time_min']} min", max_width=250),
-                tooltip=f"Asset: {ast['name']} ({ast['exposure_level']})",
+                location=[ast_item['lat'], ast_item['lon']],
+                popup=folium.Popup(f"<div style='color:#111827;'><b>{ast_item['name']}</b><br>Type: {ast_item['type'].upper()}<br>Exposure: <b>{ast_item['exposure_level']}</b><br>Lead Time: {ast_item['lead_time_min']} min</div>", max_width=250),
+                tooltip=f"Asset: {ast_item['name']} ({ast_item['exposure_level']})",
                 icon=folium.Icon(color=ast_color, icon='info-sign')
             ).add_to(m)
         
@@ -1155,11 +1289,11 @@ with tab_gis:
         st_folium(m, width="100%", height=520)
 
 # ----------------------------------------------------------------------------
-# TAB 2: XGBOOST AI RISK ENGINE
+# TAB 2: ML RISK SCORING ENGINE (XGBOOST / CALIBRATED GBDT)
 # ----------------------------------------------------------------------------
 with tab_ml_risk:
-    st.subheader("AI Flood Risk Scoring Engine (XGBoost / LightGBM)")
-    st.markdown("Combines gradient-boosted decision trees with terrain DEM slope, antecedent moisture, and river surge velocity into an **uncertainty-aware calibrated probability score**.")
+    st.markdown("##### Gradient Boosted Flood Risk Model (Feature Attribution & Uncertainty Bounds)")
+    st.caption("Computes probability of flash flood inundation calibrated with DEM slope, antecendent soil moisture, and river surge velocity.")
     
     risk_scores = st.session_state.risk_scores
     cols = st.columns(len(risk_scores))
@@ -1169,33 +1303,33 @@ with tab_ml_risk:
             score_val = r_data.get('risk_score_pct', 0.0)
             conf_val = r_data.get('confidence_pct', 90.0)
             sigma_val = r_data.get('uncertainty_sigma', 5.0)
-            color = r_data.get('color', '#00E676')
+            color = r_data.get('color', '#10B981')
             
             fig_gauge = go.Figure(go.Indicator(
                 mode="gauge+number",
                 value=score_val,
                 domain={'x': [0, 1], 'y': [0, 1]},
-                title={'text': f"<b>{zone}</b><br><span style='font-size:11px; color:#A0AEC0;'>Confidence: {conf_val}% (±{sigma_val}%)</span>"},
+                title={'text': f"<span style='font-size:14px; font-weight:700; color:#F8FAFC;'>{zone}</span><br><span style='font-size:11px; color:#94A3B8;'>Conf: {conf_val}% (±{sigma_val}%)</span>"},
                 gauge={
-                    'axis': {'range': [0, 100], 'tickcolor': '#718096'},
+                    'axis': {'range': [0, 100], 'tickcolor': '#475569'},
                     'bar': {'color': color},
-                    'bgcolor': 'rgba(255,255,255,0.05)',
+                    'bgcolor': '#1E293B',
                     'steps': [
-                        {'range': [0, 30], 'color': "rgba(0, 230, 118, 0.15)"},
-                        {'range': [30, 60], 'color': "rgba(255, 153, 0, 0.15)"},
-                        {'range': [60, 100], 'color': "rgba(255, 46, 99, 0.15)"}
+                        {'range': [0, 30], 'color': "rgba(16, 185, 129, 0.15)"},
+                        {'range': [30, 60], 'color': "rgba(245, 158, 11, 0.15)"},
+                        {'range': [60, 100], 'color': "rgba(239, 68, 68, 0.15)"}
                     ],
-                    'threshold': {'line': {'color': "#FF2E63", 'width': 3}, 'thickness': 0.75, 'value': 60}
+                    'threshold': {'line': {'color': "#EF4444", 'width': 3}, 'thickness': 0.75, 'value': 60}
                 }
             ))
-            fig_gauge.update_layout(height=230, margin=dict(l=10, r=10, t=50, b=10), paper_bgcolor='rgba(0,0,0,0)')
+            fig_gauge.update_layout(height=210, margin=dict(l=10, r=10, t=40, b=10), paper_bgcolor='rgba(0,0,0,0)', font={'color': "#F8FAFC"})
             st.plotly_chart(fig_gauge, use_container_width=True)
             
             st.markdown(f"**Threat:** `{r_data.get('risk_state')}`")
             st.caption(f"Sensor Agreement: `{r_data.get('sensor_consensus')}`")
             
             # Top drivers
-            st.markdown("##### 🔍 Top Drivers")
+            st.markdown("###### Feature Attribution")
             for factor, imp in r_data.get('top_factors', []):
                 st.caption(f"• **{factor}**: `{imp}%`")
 
@@ -1203,30 +1337,32 @@ with tab_ml_risk:
 # TAB 3: CRITICAL ASSET EXPOSURE & IMPACT ENGINE
 # ----------------------------------------------------------------------------
 with tab_assets:
-    st.subheader("Critical Infrastructure Exposure & Lead-Time Matrix")
-    st.markdown("Flags exposed mountain highways, bridges, villages, and hydropower dams with actionable location-specific lead time.")
+    st.markdown("##### Infrastructure Exposure Matrix & Evacuation Lead-Time")
+    st.caption("Monitors lifeline corridors, arterial river bridges, vulnerable valley habitations, and hydroelectric reservoirs.")
     
     asset_df = pd.DataFrame(st.session_state.asset_exposures)
     if not asset_df.empty:
         for idx, row in asset_df.iterrows():
             st.markdown(f"""
-            <div class="glass-card" style="border-left: 5px solid {row['badge_color']};">
-                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+            <div class="ops-panel" style="border-left: 4px solid {row['badge_color']};">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
                     <div>
-                        <h4 style="margin: 0; color: #FFF;">{row['name']}</h4>
-                        <span style="font-size: 12px; color: #A0AEC0;">TYPE: {row['type'].upper()} • NEAREST HRU: {row['nearest_hru']} • CRITICALITY: {row['criticality']}</span>
+                        <div style="font-size: 16px; font-weight: 700; color: #F8FAFC;">{row['name']}</div>
+                        <div style="font-size: 12px; color: #94A3B8; margin-top: 2px;">
+                            TYPE: <b>{row['type'].upper()}</b> &nbsp;|&nbsp; NEAREST REACH: <b>{row['nearest_hru']}</b> &nbsp;|&nbsp; IMPORTANCE: <b>{row['criticality']}</b>
+                        </div>
                     </div>
                     <div style="text-align: right;">
-                        <span style="background: {row['badge_color']}; color: #FFF; padding: 4px 10px; border-radius: 6px; font-weight: 700; font-size: 12px;">
+                        <span style="background: {row['badge_color']}; color: #FFF; padding: 3px 8px; border-radius: 4px; font-weight: 700; font-size: 11px;">
                             {row['exposure_level']}
                         </span>
-                        <div style="font-size: 18px; font-weight: 800; color: #00E5FF; margin-top: 4px;">
-                            ⏱️ {row['lead_time_min']} MINS LEAD TIME
+                        <div style="font-size: 16px; font-weight: 700; font-family: 'Roboto Mono', monospace; color: #38BDF8; margin-top: 4px;">
+                            T_lead: {row['lead_time_min']} MINS
                         </div>
                     </div>
                 </div>
-                <div style="margin-top: 10px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.06); font-size: 13px; color: #E2E8F0;">
-                    <b>Action Protocol:</b> {row['action_required']}
+                <div style="margin-top: 10px; padding-top: 8px; border-top: 1px solid #1E293B; font-size: 12px; color: #E2E8F0;">
+                    <b>Standard Action Protocol:</b> {row['action_required']}
                 </div>
             </div>
             """, unsafe_allow_html=True)
@@ -1235,18 +1371,18 @@ with tab_assets:
 # TAB 4: MULTI-SOURCE TELEMETRY STREAMS
 # ----------------------------------------------------------------------------
 with tab_telemetry:
-    st.subheader("Multi-Modal Telemetry Streams (Live Ingestion & Differential Engine)")
+    st.markdown("##### Live Multi-Sensor Hydrometeorological Telemetry Stream")
     df_hist = st.session_state.simulator.get_history_df()
     
     if not df_hist.empty:
         c_sel1, c_sel2 = st.columns([2, 1])
         with c_sel1:
-            selected_zone_plot = st.multiselect("Filter Catchment Zones", st.session_state.zones, default=st.session_state.zones)
+            selected_zone_plot = st.multiselect("Active Drainage Zones", st.session_state.zones, default=st.session_state.zones)
         with c_sel2:
             st.download_button(
-                "📥 Export Telemetry CSV",
+                "Export Telemetry (CSV)",
                 df_hist.to_csv(index=False),
-                file_name=f"sih26192_telemetry_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+                file_name=f"aquasentinel_telemetry_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
                 mime="text/csv",
                 use_container_width=True
             )
@@ -1256,33 +1392,42 @@ with tab_telemetry:
         fig = make_subplots(
             rows=2, cols=2,
             subplot_titles=(
-                "🌧️ Rain Gauge (mm/h)",
-                "📡 Microwave CML Attenuation (dBm)",
-                "🌊 River Gauge Level (m)",
-                "🌉 Bridge Acoustic Vibration (g)"
+                "Precipitation Intensity (mm/h)",
+                "Microwave CML Attenuation (dBm)",
+                "River Stage Gauge (m)",
+                "Bridge Acoustic Vibration (g)"
             ),
-            vertical_spacing=0.12,
+            vertical_spacing=0.14,
             horizontal_spacing=0.08
         )
         
-        colors = ['#00E5FF', '#76FF03', '#FFD600', '#FF2E63', '#D500F9']
+        colors = ['#38BDF8', '#34D399', '#FBBF24', '#F87171', '#C084FC']
         for idx, zone in enumerate(selected_zone_plot):
             z_data = filtered_df[filtered_df['zone'] == zone]
             color = colors[idx % len(colors)]
-            fig.add_trace(go.Scatter(x=z_data['time'], y=z_data['rainfall'], name=zone, line=dict(color=color), legendgroup=zone), row=1, col=1)
-            fig.add_trace(go.Scatter(x=z_data['time'], y=z_data['cml'], name=zone, line=dict(color=color), legendgroup=zone, showlegend=False), row=1, col=2)
-            fig.add_trace(go.Scatter(x=z_data['time'], y=z_data['river_level'], name=zone, line=dict(color=color), legendgroup=zone, showlegend=False), row=2, col=1)
-            fig.add_trace(go.Scatter(x=z_data['time'], y=z_data['vibration'], name=zone, line=dict(color=color), legendgroup=zone, showlegend=False), row=2, col=2)
+            fig.add_trace(go.Scatter(x=z_data['time'], y=z_data['rainfall'], name=zone, line=dict(color=color, width=1.8), legendgroup=zone), row=1, col=1)
+            fig.add_trace(go.Scatter(x=z_data['time'], y=z_data['cml'], name=zone, line=dict(color=color, width=1.8), legendgroup=zone, showlegend=False), row=1, col=2)
+            fig.add_trace(go.Scatter(x=z_data['time'], y=z_data['river_level'], name=zone, line=dict(color=color, width=1.8), legendgroup=zone, showlegend=False), row=2, col=1)
+            fig.add_trace(go.Scatter(x=z_data['time'], y=z_data['vibration'], name=zone, line=dict(color=color, width=1.8), legendgroup=zone, showlegend=False), row=2, col=2)
         
-        fig.update_layout(height=500, margin=dict(l=20, r=20, t=40, b=20), hovermode="x unified", paper_bgcolor='rgba(0,0,0,0)')
+        fig.update_layout(
+            height=480, 
+            margin=dict(l=20, r=20, t=35, b=20), 
+            hovermode="x unified", 
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(15,23,42,0.6)',
+            font={'color': "#94A3B8"}
+        )
+        fig.update_xaxes(gridcolor='#1E293B')
+        fig.update_yaxes(gridcolor='#1E293B')
         st.plotly_chart(fig, use_container_width=True)
 
 # ----------------------------------------------------------------------------
 # TAB 5: HISTORICAL MEMORY & ANALOG MATCHING
 # ----------------------------------------------------------------------------
 with tab_memory:
-    st.subheader("Historical Event Memory Layer (Case-Based Reasoning)")
-    st.markdown("Stores benchmark Himalayan disaster events, comparing live hydrometeorological vectors against historical cloudburst patterns for analog risk projection.")
+    st.markdown("##### Historical Disaster Memory & Analog Matching Layer (Case-Based Reasoning)")
+    st.caption("Compares current hydrometeorological vectors against benchmark Himalayan catastrophe signatures using high-dimensional cosine similarity.")
     
     current_upper_hru = st.session_state.latest_data.get('HRU-01', {})
     analog_event, similarity_pct = st.session_state.memory_layer.find_analog_match(current_upper_hru)
@@ -1290,11 +1435,14 @@ with tab_memory:
     col_m1, col_m2 = st.columns([1, 2])
     with col_m1:
         st.markdown(f"""
-        <div class="glass-card">
-            <div style="font-size: 12px; color: #8F9CAE; text-transform: uppercase; font-weight: 600;">Live Analog Match</div>
-            <div class="mono-num" style="color: {'#FF2E63' if similarity_pct > 75 else '#00E676'}; font-size: 32px;">{similarity_pct}%</div>
-            <div style="font-size: 12px; color: #A0AEC0; margin-top: 6px;">
-                Signature: <b>{current_upper_hru.get('rainfall', 0):.1f} mm/h</b> | Soil Sat: <b>{current_upper_hru.get('soil_saturation', 0):.2f}</b>
+        <div class="ops-panel">
+            <div class="kpi-card-header">Live Analog Match Score</div>
+            <div class="kpi-card-value" style="color: {'#EF4444' if similarity_pct > 75 else '#10B981'}; font-size: 28px;">
+                {similarity_pct}%
+            </div>
+            <div style="font-size: 12px; color: #94A3B8; margin-top: 6px;">
+                Live Peak: <b>{current_upper_hru.get('rainfall', 0):.1f} mm/h</b><br>
+                Soil Saturation: <b>{current_upper_hru.get('soil_saturation', 0):.2f}</b>
             </div>
         </div>
         """, unsafe_allow_html=True)
@@ -1302,55 +1450,55 @@ with tab_memory:
     with col_m2:
         if analog_event:
             st.markdown(f"""
-            <div class="glass-card" style="border-left: 5px solid #00E5FF;">
-                <h4 style="margin: 0; color: #00E5FF;">🏛️ Closest Historical Signature: {analog_event['event_name']}</h4>
-                <div style="font-size: 13px; color: #E2E8F0; margin-top: 8px;">
-                    • <b>Event Date:</b> {analog_event['date']}<br>
-                    • <b>Benchmark Peak Rainfall:</b> {analog_event['peak_rain_mm_h']} mm/h (Cumulative: {analog_event['cum_rain_mm']} mm)<br>
-                    • <b>Historical Peak Discharge:</b> {analog_event['peak_discharge_m3_s']} m³/s<br>
-                    • <b>Historical Outcome:</b> {analog_event['outcome']}
+            <div class="ops-panel" style="border-left: 4px solid #38BDF8;">
+                <div style="font-size: 15px; font-weight: 700; color: #38BDF8;">Closest Historical Event Signature: {analog_event['event_name']}</div>
+                <div style="font-size: 12px; color: #CBD5E1; margin-top: 6px; line-height: 1.6;">
+                    • <b>Date of Occurrence:</b> {analog_event['date']}<br>
+                    • <b>Benchmark Rain Rate:</b> {analog_event['peak_rain_mm_h']} mm/h (Cumulative: {analog_event['cum_rain_mm']} mm)<br>
+                    • <b>Peak Historical Discharge:</b> {analog_event['peak_discharge_m3_s']} m³/s<br>
+                    • <b>Documented Impact:</b> {analog_event['outcome']}
                 </div>
             </div>
             """, unsafe_allow_html=True)
 
-    st.markdown("#### 📚 Historical Extreme Events Repository")
+    st.markdown("###### Historical Disaster Reference Repository")
     st.dataframe(pd.DataFrame(st.session_state.memory_layer.past_events), use_container_width=True)
 
 # ----------------------------------------------------------------------------
-# TAB 6: NDRF / SDMA EARLY WARNING DISPATCH
+# TAB 6: NDRF / SDMA EARLY WARNING DISPATCH CONSOLE
 # ----------------------------------------------------------------------------
 with tab_ndrf:
-    st.subheader("Official Disaster Management Early Warning Console")
-    st.markdown("Standard Operating Procedures (SOP) & automated alert dispatches for **NDRF Battalions, SDMAs, and District Authorities** across 13+ Himalayan Hill States/UTs.")
+    st.markdown("##### National Disaster Response Force (NDRF) & SDMA Dispatch Operations")
+    st.caption("Standard Operating Procedures (SOP) & automated alert dispatches across 13+ Himalayan Hill States & Union Territories.")
     
     high_threat_nodes = [nid for nid, r in st.session_state.cascade.risk_propagated.items() if r.get('risk_level') == 2]
     
     if high_threat_nodes:
         st.markdown(f"""
-        <div class="glass-card" style="border-left: 6px solid #FF2E63; background: rgba(255, 46, 99, 0.08);">
+        <div class="ops-panel" style="border-left: 5px solid #EF4444; background: rgba(239, 68, 68, 0.06);">
             <div style="display: flex; justify-content: space-between; align-items: center;">
-                <h3 style="margin: 0; color: #FF2E63;">🚨 HIGH-PRIORITY FLASH FLOOD EVACUATION BULLETIN</h3>
-                <span style="background: #FF2E63; color: #FFF; padding: 4px 10px; border-radius: 4px; font-weight: 700; font-size: 12px;">IMMEDIATE ACTION</span>
+                <div style="font-size: 16px; font-weight: 800; color: #EF4444;">HIGH-PRIORITY EVACUATION DIRECTIVE (STAGE-2)</div>
+                <span style="background: #EF4444; color: #FFF; padding: 3px 8px; border-radius: 4px; font-weight: 700; font-size: 11px;">IMMEDIATE ACTION REQUIRED</span>
             </div>
-            <p style="margin: 8px 0; color: #E2E8F0; font-size: 14px;">
-                <b>Issuing Authority:</b> AquaSentinel SIH26192 Command Hub | <b>Target Reaches:</b> <code>{', '.join(high_threat_nodes)}</code>
-            </p>
-            <div style="margin-top: 10px; font-size: 13px; line-height: 1.6; color: #F7FAFC;">
-                <b>Mandatory Operational Directives:</b><br>
-                1. <b>Evacuation:</b> Immediately mobilize NDRF 14th Bn / SDRF quick-response teams to downstream hamlets and Village-A.<br>
-                2. <b>Highway Closure:</b> Enforce immediate vehicular traffic stoppage on <b>NH-3</b> and <b>NH-7</b> riverbed vulnerable stretches.<br>
-                3. <b>Dam Buffering:</b> Signal Larji / Pandoh Dam control rooms to initiate emergency reservoir sluice pre-drawdown.<br>
-                4. <b>Public Broadcast:</b> Trigger automated acoustic warning sirens and geo-targeted cellular SMS alerts.
+            <div style="margin: 8px 0; font-size: 12px; color: #CBD5E1;">
+                <b>Issuing Agency:</b> Central Flood Control Command Room &nbsp;|&nbsp; <b>Affected Reaches:</b> <code>{', '.join(high_threat_nodes)}</code>
+            </div>
+            <div style="margin-top: 8px; font-size: 12px; line-height: 1.6; color: #F8FAFC;">
+                <b>Standard Operating Procedure Directives:</b><br>
+                1. <b>Civilian Evacuation:</b> Immediate dispatch of NDRF 14th Battalion and SDRF quick-response teams to low-lying settlements and Village-A.<br>
+                2. <b>Highway Blockade:</b> Instruct Himachal Traffic Police to halt all vehicular movement along <b>NH-3</b> and <b>NH-7</b> riverine stretches.<br>
+                3. <b>Reservoir Sluice Control:</b> Instruct Larji & Pandoh Dam engineers to initiate emergency flood cushion pre-drawdown.<br>
+                4. <b>Public Warning System:</b> Activate community acoustic sirens and broadcast localized SMS cell-broadcast warnings.
             </div>
         </div>
         """, unsafe_allow_html=True)
     else:
         st.markdown("""
-        <div class="glass-card" style="border-left: 6px solid #00E676; background: rgba(0, 230, 118, 0.05);">
-            <h3 style="margin: 0; color: #00E676;">✅ STATUS GREEN: ALL REPOSITORY STREAMS NOMINAL</h3>
-            <p style="margin: 6px 0 0 0; color: #CBD5E0; font-size: 13px;">
-                All hydrometeorological channels operating within 95% confidence safety bounds. Sampling active at 1-minute resolution.
-            </p>
+        <div class="ops-panel" style="border-left: 5px solid #10B981; background: rgba(16, 185, 129, 0.05);">
+            <div style="font-size: 15px; font-weight: 700; color: #10B981;">STATUS GREEN: ALL DRAINAGE BASIN READINGS NOMINAL</div>
+            <div style="margin-top: 4px; color: #94A3B8; font-size: 12px;">
+                All multi-sensor channels operating within 95% confidence bounds. Continuous sampling active at 60-second intervals.
+            </div>
         </div>
         """, unsafe_allow_html=True)
 
@@ -1358,4 +1506,4 @@ with tab_ndrf:
 # FOOTER
 # ----------------------------------------------------------------------------
 st.markdown("---")
-st.caption("Smart India Hackathon 2026 • PS ID: SIH26192 • Team Error404 (R315-217) • Detect ➔ Verify ➔ Model ➔ Explain ➔ Act")
+st.caption("Smart India Hackathon 2026 • PS ID: SIH26192 • Team: Error404 (ID: R315-217) • National Early Warning Framework")
