@@ -484,100 +484,90 @@ class RunoffCalculator:
 # ============================================================================
 # PHASE 4: HRU CASCADE GRAPH & RISK ROUTING
 # ============================================================================
-
-class HRUCascade:
-    def __init__(self):
-        self.graph = nx.DiGraph()
-        self.node_props = {}
-        self.risk_propagated = {}
+with tab_map:
+    st.subheader("Watershed Topologic Cascade & Inundation Map")
+    st.markdown("Hydrograph routing tracks upstream discharge surge propagating down the catchment network to vulnerable settlements.")
     
-    def add_node(self, node_id, node_type='hru', name='', lat=32.1, lon=77.1, area_km2=4.0, elevation_m=2400):
-        self.graph.add_node(node_id)
-        self.node_props[node_id] = {
-            'id': node_id,
-            'name': name or node_id,
-            'type': node_type,
-            'lat': lat,
-            'lon': lon,
-            'area_km2': area_km2,
-            'elevation_m': elevation_m
-        }
-        self.risk_propagated[node_id] = {'risk_level': 0, 'total_discharge': 0.0, 'state': 'GREEN'}
+    cascade = st.session_state.cascade
+    nodes = cascade.get_node_details()
     
-    def add_edge(self, upstream, downstream, lag_minutes=20):
-        self.graph.add_edge(upstream, downstream, lag_minutes=lag_minutes)
-    
-    def create_catchment(self, catchment_preset="Beas Catchment (Kullu/Manali)"):
-        self.graph.clear()
-        self.node_props.clear()
+    if nodes:
+        avg_lat = np.mean([n['lat'] for n in nodes])
+        avg_lon = np.mean([n['lon'] for n in nodes])
         
-        if catchment_preset == "Kedarnath / Mandakini Basin":
-            base_lat, base_lon = 30.73, 79.06
-        else:
-            base_lat, base_lon = 32.18, 77.12
-            
-        self.add_node('HRU-01', node_type='hru', name='Upper Ridge Catchment', lat=round(base_lat, 4), lon=round(base_lon, 4), area_km2=4.2, elevation_m=3200)
-        self.add_node('HRU-02', node_type='hru', name='Highland Slope', lat=round(base_lat - 0.04, 4), lon=round(base_lon + 0.02, 4), area_km2=5.8, elevation_m=2700)
-        self.add_node('HRU-03', node_type='hru', name='Tributary North Reach', lat=round(base_lat - 0.06, 4), lon=round(base_lon - 0.01, 4), area_km2=3.5, elevation_m=2450)
-        self.add_node('HRU-04', node_type='hru', name='Tributary South Reach', lat=round(base_lat - 0.09, 4), lon=round(base_lon + 0.04, 4), area_km2=4.1, elevation_m=2200)
-        self.add_node('HRU-05', node_type='hru', name='Valley Confluence Basin', lat=round(base_lat - 0.12, 4), lon=round(base_lon + 0.03, 4), area_km2=6.0, elevation_m=1850)
-        self.add_node('Village-A', node_type='settlement', name='Downstream Settlement', lat=round(base_lat - 0.16, 4), lon=round(base_lon + 0.05, 4), area_km2=1.2, elevation_m=1600)
+        # 1. Free OpenStreetMap base layer (No API key needed)
+        m = folium.Map(location=[avg_lat, avg_lon], zoom_start=12, tiles="OpenStreetMap")
         
-        self.add_edge('HRU-01', 'HRU-02', lag_minutes=15)
-        self.add_edge('HRU-02', 'HRU-03', lag_minutes=20)
-        self.add_edge('HRU-03', 'HRU-05', lag_minutes=25)
-        self.add_edge('HRU-04', 'HRU-05', lag_minutes=20)
-        self.add_edge('HRU-05', 'Village-A', lag_minutes=35)
-    
-    def propagate_risk(self, local_risk_data, runoff_data):
-        result = {}
-        try:
-            topo_order = list(nx.topological_sort(self.graph))
-        except Exception:
-            topo_order = list(self.graph.nodes())
+        # 2. Free High-Resolution Satellite View
+        folium.TileLayer(
+            tiles='https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+            attr='Esri World Imagery',
+            name='🛰️ Satellite View'
+        ).add_to(m)
         
-        for node in topo_order:
-            local_risk = local_risk_data.get(node, {}).get('risk_level', 0)
-            local_discharge = runoff_data.get(node, {}).get('discharge_m3_s', 0.0)
-            
-            upstream_risks = []
-            upstream_discharges = []
-            
-            for pred in self.graph.predecessors(node):
-                if pred in result:
-                    upstream_risks.append(result[pred]['risk_level'])
-                    upstream_discharges.append(result[pred]['total_discharge'])
-            
-            if upstream_risks:
-                max_upstream_risk = max(upstream_risks)
-                total_risk = max(local_risk, max_upstream_risk)
-                total_discharge = local_discharge + sum(upstream_discharges)
-            else:
-                total_risk = local_risk
-                total_discharge = local_discharge
-            
-            risk_states = {0: 'GREEN', 1: 'WATCH', 2: 'RED'}
-            result[node] = {
-                'risk_level': total_risk,
-                'risk_state': risk_states.get(total_risk, 'GREEN'),
-                'local_risk': local_risk,
-                'total_discharge': round(total_discharge, 2),
-                'upstream_nodes': list(self.graph.predecessors(node))
-            }
+        # 3. Free Topographic Terrain elevation layer
+        folium.TileLayer(
+            tiles='https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
+            attr='OpenTopoMap',
+            name='⛰️ Topo Terrain'
+        ).add_to(m)
         
-        self.risk_propagated = result
-        return result
-    
-    def get_node_details(self):
-        details = []
-        for node_id, props in self.node_props.items():
-            risk_info = self.risk_propagated.get(node_id, {'risk_level': 0, 'risk_state': 'GREEN', 'total_discharge': 0.0})
-            details.append({
-                **props,
-                **risk_info
-            })
-        return details
-
+        # Draw directed flow channels (Edges)
+        for u, v, data in cascade.graph.edges(data=True):
+            u_node = cascade.node_props[u]
+            v_node = cascade.node_props[v]
+            lag = data.get('lag_minutes', 20)
+            
+            u_risk = cascade.risk_propagated.get(u, {}).get('risk_level', 0)
+            line_color = '#00C853' if u_risk == 0 else ('#FFC107' if u_risk == 1 else '#D32F2F')
+            
+            folium.PolyLine(
+                locations=[[u_node['lat'], u_node['lon']], [v_node['lat'], v_node['lon']]],
+                color=line_color,
+                weight=5,
+                opacity=0.9,
+                dash_array='6, 10' if u_risk > 0 else None,
+                tooltip=f"Hydrologic Channel {u} ➔ {v} (Lag: {lag} min)"
+            ).add_to(m)
+        
+        # Add Nodes with stable markers
+        for n in nodes:
+            r_level = n.get('risk_level', 0)
+            color_name = 'green' if r_level == 0 else ('orange' if r_level == 1 else 'red')
+            icon_name = 'home' if n['type'] == 'settlement' else 'tint'
+            
+            popup_html = f"""
+            <div style="font-family: Arial; min-width: 190px;">
+                <h4 style="margin: 0 0 5px 0;">{n['name']} ({n['id']})</h4>
+                <b>Classification:</b> {n['type'].upper()}<br>
+                <b>Elevation:</b> {n['elevation_m']} m<br>
+                <b>Coordinates:</b> {n['lat']}, {n['lon']}<br>
+                <b>Threat State:</b> <span style="color:{color_name}; font-weight:bold;">{n['risk_state']}</span><br>
+                <b>Accumulated Q:</b> {n['total_discharge']} m³/s
+            </div>
+            """
+            
+            folium.Marker(
+                location=[n['lat'], n['lon']],
+                popup=folium.Popup(popup_html, max_width=260),
+                tooltip=f"{n['id']}: {n['risk_state']} ({n['total_discharge']} m³/s)",
+                icon=folium.Icon(color=color_name, icon=icon_name)
+            ).add_to(m)
+            
+            # High-risk inundation circle
+            if r_level == 2:
+                folium.Circle(
+                    location=[n['lat'], n['lon']],
+                    radius=1200,
+                    color='#D32F2F',
+                    fill=True,
+                    fill_opacity=0.3,
+                    popup=f"Critical Inundation Hazard Zone: {n['id']}"
+                ).add_to(m)
+        
+        # Layer switcher control (top-right)
+        folium.LayerControl(position='topright').add_to(m)
+        st_folium(m, width="100%", height=520)
 # ============================================================================
 # PHASE 5: STREAMLIT WEB APPLICATION
 # ============================================================================
