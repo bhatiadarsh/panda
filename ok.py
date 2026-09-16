@@ -4,7 +4,7 @@ Title: Flash Flood Prediction System for Hilly Regions using Multi-Source Data
 Theme: Disaster Management | Category: Software
 Team Name: Error404 | Team ID: R315-217
 
-AquaSentinel: AI-Driven Multi-Source Flash Flood Prediction & Asset Exposure System
+AquaSentinel: Advanced Command & Early Warning Platform (Next-Gen UI Edition)
 """
 
 import streamlit as st
@@ -36,7 +36,6 @@ class LiveTelemetryProvider:
         self.last_latency_ms = 0
     
     def fetch_node_data(self, lat, lon):
-        """Fetches live meteorological observations for specified coordinates."""
         start_t = time.time()
         try:
             if self.provider == "OpenWeatherMap" and self.api_key:
@@ -57,7 +56,7 @@ class LiveTelemetryProvider:
             f"current=precipitation,rain,relative_humidity_2m,surface_pressure,wind_speed_10m,soil_moisture_0_to_1cm&"
             f"timezone=auto"
         )
-        req = urllib.request.Request(url, headers={'User-Agent': 'AquaSentinel-SIH26192/3.0'})
+        req = urllib.request.Request(url, headers={'User-Agent': 'AquaSentinel-SIH26192/4.0'})
         with urllib.request.urlopen(req, timeout=6) as response:
             res_data = json.loads(response.read().decode('utf-8'))
             curr = res_data.get('current', {})
@@ -68,7 +67,7 @@ class LiveTelemetryProvider:
             pressure = float(curr.get('surface_pressure', 1013.0))
             
             self.last_latency_ms = round((time.time() - start_t) * 1000)
-            self.last_status = f"Live Connected (Open-Meteo • {self.last_latency_ms}ms)"
+            self.last_status = f"Live Connected ({self.last_latency_ms}ms)"
             self.last_fetch_time = datetime.now()
             
             return {
@@ -81,7 +80,7 @@ class LiveTelemetryProvider:
             
     def _fetch_openweathermap(self, lat, lon, start_t):
         url = f"https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={self.api_key}&units=metric"
-        req = urllib.request.Request(url, headers={'User-Agent': 'AquaSentinel-SIH26192/3.0'})
+        req = urllib.request.Request(url, headers={'User-Agent': 'AquaSentinel-SIH26192/4.0'})
         with urllib.request.urlopen(req, timeout=6) as response:
             res_data = json.loads(response.read().decode('utf-8'))
             rain_dict = res_data.get('rain', {})
@@ -92,7 +91,7 @@ class LiveTelemetryProvider:
             soil_moist = float(humidity / 100.0 * 0.5)
             
             self.last_latency_ms = round((time.time() - start_t) * 1000)
-            self.last_status = f"Live Connected (OpenWeatherMap • {self.last_latency_ms}ms)"
+            self.last_status = f"Live Connected ({self.last_latency_ms}ms)"
             self.last_fetch_time = datetime.now()
             
             return {
@@ -105,7 +104,7 @@ class LiveTelemetryProvider:
 
     def _fetch_weatherapi(self, lat, lon, start_t):
         url = f"https://api.weatherapi.com/v1/current.json?key={self.api_key}&q={lat},{lon}"
-        req = urllib.request.Request(url, headers={'User-Agent': 'AquaSentinel-SIH26192/3.0'})
+        req = urllib.request.Request(url, headers={'User-Agent': 'AquaSentinel-SIH26192/4.0'})
         with urllib.request.urlopen(req, timeout=6) as response:
             res_data = json.loads(response.read().decode('utf-8'))
             curr = res_data.get('current', {})
@@ -115,7 +114,7 @@ class LiveTelemetryProvider:
             soil_moist = float(humidity / 100.0 * 0.55)
             
             self.last_latency_ms = round((time.time() - start_t) * 1000)
-            self.last_status = f"Live Connected (WeatherAPI • {self.last_latency_ms}ms)"
+            self.last_status = f"Live Connected ({self.last_latency_ms}ms)"
             self.last_fetch_time = datetime.now()
             
             return {
@@ -138,12 +137,12 @@ class TelemetrySimulator:
         
         self.history = {zone: {
             'time': [],
-            'rainfall': [],         # mm/h
-            'cum_rainfall': [],     # mm cumulative
-            'cml': [],              # dB (received signal level)
-            'vibration': [],        # g (bridge vibration)
-            'river_level': [],      # meters
-            'soil_saturation': []   # 0.0 - 1.0 (fraction)
+            'rainfall': [],
+            'cum_rainfall': [],
+            'cml': [],
+            'vibration': [],
+            'river_level': [],
+            'soil_saturation': []
         } for zone in self.zones}
         
         self.mode = "Synthetic Simulation"
@@ -173,7 +172,6 @@ class TelemetrySimulator:
         for zone_idx, zone in enumerate(self.zones):
             coords = node_coords.get(zone, {'lat': 32.18 - zone_idx * 0.03, 'lon': 77.12 + zone_idx * 0.01})
             
-            # Base telemetry generation
             if self.mode in ("Live Real-Time API", "Hybrid (Live + Surge)"):
                 live_res = self.api_provider.fetch_node_data(coords['lat'], coords['lon'])
                 if live_res:
@@ -197,7 +195,6 @@ class TelemetrySimulator:
             river = base_river
             soil = base_soil
             
-            # Scenario / Hazard Injections
             if self.scenario_intensity > 0 or self.scenario_preset != "Normal Day":
                 zone_factor = 1.0 - (zone_idx * 0.15)
                 eff_intensity = self.scenario_intensity * max(0.4, zone_factor)
@@ -211,14 +208,13 @@ class TelemetrySimulator:
                 elif self.scenario_preset == "Sensor Glitch (Single Sensor Fault)":
                     if zone_idx == 0:
                         vibration += 2.2
-                else: # Default Flash Flood Building
+                else:
                     rainfall += eff_intensity * (14.0 + np.random.uniform(0, 6))
                     cml -= eff_intensity * (14.0 + np.random.uniform(0, 5))
                     vibration += eff_intensity * (0.9 + np.random.uniform(0, 0.4))
                     river += eff_intensity * (1.5 + np.random.uniform(0, 0.5))
                     soil += eff_intensity * (0.35 + np.random.uniform(0, 0.1))
             
-            # Physical bounds
             rainfall = float(np.clip(rainfall, 0.0, 150.0))
             cml = float(np.clip(cml, 0.0, 45.0))
             vibration = float(np.clip(vibration, 0.0, 5.0))
@@ -284,23 +280,7 @@ class TelemetrySimulator:
 # ============================================================================
 
 class MLFloodRiskEngine:
-    """
-    Gradient-Boosted Decision Tree (GBDT / XGBoost surrogate) Risk Engine
-    Fuses Rainfall, River Level, Soil Moisture, Terrain DEM/Slope, and CML signals
-    into a calibrated flood probability and uncertainty-aware confidence interval.
-    """
     def __init__(self):
-        self.feature_names = [
-            'rain_rate_mm_h',       # Current rainfall rate (mm/h)
-            'cum_rain_3h_mm',        # 3-hr cumulative rainfall depth (mm)
-            'soil_saturation',       # Soil moisture index (0-1)
-            'dem_slope_deg',         # DEM terrain slope steepness (degrees)
-            'elevation_m',           # Altitude / elevation (m)
-            'river_stage_m',         # Hydrostatic gauge water level (m)
-            'cml_attenuation_db',    # Microwave link attenuation (dB)
-            'vibration_g',           # Bridge acoustic vibration (g)
-            'curve_number_cn'        # SCS-CN Hydrologic soil runoff potential
-        ]
         self.feature_weights = {
             'rain_rate_mm_h': 0.26,
             'cum_rain_3h_mm': 0.18,
@@ -316,24 +296,17 @@ class MLFloodRiskEngine:
         diff_anomalies = diff_anomalies or {}
         
         for zone, data in telemetry_data.items():
-            props = hru_node_props.get(zone, {
-                'slope_deg': 28.0, 
-                'elevation_m': 2200, 
-                'curve_number': 75
-            })
+            props = hru_node_props.get(zone, {'slope_deg': 28.0, 'elevation_m': 2200, 'curve_number': 75})
             
             rain = data.get('rainfall', 0.0)
             cum_rain = data.get('cum_rainfall', 0.0)
             soil = data.get('soil_saturation', 0.4)
             slope = props.get('slope_deg', 25.0)
-            elev = props.get('elevation_m', 2200)
             river = data.get('river_level', 1.2)
             cml_val = data.get('cml', 32.0)
             cml_att = max(0.0, 32.0 - cml_val)
             vibe = data.get('vibration', 0.04)
-            cn = props.get('curve_number', 75)
             
-            # Non-linear Multi-Tree Decision Stage (XGBoost / LightGBM logic)
             f_rain = np.clip(rain / 30.0, 0.0, 1.5) ** 1.3
             f_cum = np.clip(cum_rain / 50.0, 0.0, 1.5)
             f_soil = np.clip((soil - 0.3) / 0.6, 0.0, 1.5) ** 1.2
@@ -342,22 +315,15 @@ class MLFloodRiskEngine:
             f_cml = np.clip(cml_att / 15.0, 0.0, 1.5)
             f_vibe = np.clip(vibe / 1.5, 0.0, 1.5)
             
-            # Gradient Boosted Logit Ensemble
             raw_logit = (
-                (f_rain * 2.8) +
-                (f_cum * 1.8) +
-                (f_soil * 2.1) +
-                (f_slope * 1.4) +
-                (f_river * 2.4) +
-                (f_cml * 1.2) +
+                (f_rain * 2.8) + (f_cum * 1.8) + (f_soil * 2.1) +
+                (f_slope * 1.4) + (f_river * 2.4) + (f_cml * 1.2) +
                 (f_vibe * 1.1) - 3.8
             )
             
-            # Calibrated Sigmoid Probability
             prob = 1.0 / (1.0 + np.exp(-raw_logit))
             risk_score_pct = float(np.clip(prob * 100.0, 0.0, 100.0))
             
-            # Uncertainty-Aware Confidence Interval (Variance across tree ensembles)
             sensor_diff_count = 0
             if zone in diff_anomalies:
                 sensor_diff_count = sum(1 for s in diff_anomalies[zone].values() if s.get('anomalous', False))
@@ -365,27 +331,25 @@ class MLFloodRiskEngine:
             variance_sigma = max(3.5, 18.0 - (sensor_diff_count * 3.5))
             confidence_pct = max(70.0, min(98.5, 100.0 - variance_sigma))
             
-            # Risk State Classification
             if risk_score_pct >= 60.0 or sensor_diff_count >= 2:
                 risk_state = "RED (CRITICAL)"
-                color = "#D32F2F"
+                color = "#FF2E63"
                 risk_level = 2
             elif risk_score_pct >= 30.0 or sensor_diff_count == 1:
                 risk_state = "WATCH (ELEVATED)"
-                color = "#FFC107"
+                color = "#FF9900"
                 risk_level = 1
             else:
                 risk_state = "GREEN (SAFE)"
-                color = "#00C853"
+                color = "#00E676"
                 risk_level = 0
             
-            # Top Factor Feature Importances for XAI
             feature_impacts = {
                 'Rainfall Intensity': round(float(f_rain * 35), 1),
                 'Soil Saturation': round(float(f_soil * 25), 1),
-                'Terrain Slope Steepness': round(float(f_slope * 15), 1),
-                'River Surge Ascent': round(float(f_river * 20), 1),
-                'Microwave CML Attenuation': round(float(f_cml * 12), 1)
+                'Terrain Slope': round(float(f_slope * 15), 1),
+                'River Surge': round(float(f_river * 20), 1),
+                'CML Attenuation': round(float(f_cml * 12), 1)
             }
             sorted_impacts = sorted(feature_impacts.items(), key=lambda x: x[1], reverse=True)
             
@@ -397,23 +361,16 @@ class MLFloodRiskEngine:
                 'risk_state': risk_state,
                 'color': color,
                 'top_factors': sorted_impacts[:3],
-                'sensor_consensus': f"{sensor_diff_count}/4 modalities"
+                'sensor_consensus': f"{sensor_diff_count}/4 sensors"
             }
             
         return results
 
 # ============================================================================
-# PHASE 2: GIS ASSET EXPOSURE & IMPACT ENGINE (Slide 2 & 3)
+# PHASE 2: GIS ASSET EXPOSURE & IMPACT ENGINE
 # ============================================================================
 
 class GISAssetExposureEngine:
-    """
-    Evaluates vulnerability & impact on critical infrastructure:
-    - Mountain Highway Corridors (NH-3, NH-7)
-    - Critical Bridges & Culverts
-    - Downstream Villages & Hamlets
-    - Hydropower Reservoirs & Dams
-    """
     def __init__(self):
         self.assets = [
             {
@@ -423,7 +380,6 @@ class GISAssetExposureEngine:
                 'lat': 32.11,
                 'lon': 77.13,
                 'nearest_hru': 'HRU-03',
-                'vulnerability': 'HIGH',
                 'criticality': 'CRITICAL (Life-line corridor)'
             },
             {
@@ -433,7 +389,6 @@ class GISAssetExposureEngine:
                 'lat': 32.08,
                 'lon': 77.15,
                 'nearest_hru': 'HRU-04',
-                'vulnerability': 'HIGH',
                 'criticality': 'VITAL (River crossing)'
             },
             {
@@ -443,7 +398,6 @@ class GISAssetExposureEngine:
                 'lat': 32.02,
                 'lon': 77.17,
                 'nearest_hru': 'Village-A',
-                'vulnerability': 'EXTREME',
                 'criticality': 'HUMAN LIVES (Evacuation priority)'
             },
             {
@@ -453,36 +407,33 @@ class GISAssetExposureEngine:
                 'lat': 31.98,
                 'lon': 77.19,
                 'nearest_hru': 'Village-A',
-                'vulnerability': 'MEDIUM',
                 'criticality': 'STRATEGIC (Grid & flood buffering)'
             }
         ]
     
     def evaluate_exposure(self, node_risks, runoff_discharges):
         evaluated_assets = []
-        
         for ast in self.assets:
             hru_id = ast['nearest_hru']
             hru_risk = node_risks.get(hru_id, {})
-            risk_pct = hru_risk.get('risk_score_pct', 0.0)
-            risk_state = hru_risk.get('risk_state', 'GREEN')
+            risk_state = hru_risk.get('risk_state', 'GREEN (SAFE)')
             q_flow = runoff_discharges.get(hru_id, {}).get('discharge_m3_s', 0.0)
             
             if 'RED' in risk_state:
-                exposure_level = 'CRITICAL / IMMINENT INUNDATION'
-                badge_color = '#D32F2F'
+                exposure_level = 'CRITICAL INUNDATION'
+                badge_color = '#FF2E63'
                 lead_time_min = max(15, 60 - int(q_flow * 0.8))
                 action_required = '🚨 Immediate Evacuation & Traffic Blockade'
             elif 'WATCH' in risk_state:
-                exposure_level = 'MODERATE / WATCH STANDBY'
-                badge_color = '#FFC107'
+                exposure_level = 'MODERATE WATCH'
+                badge_color = '#FF9900'
                 lead_time_min = max(45, 120 - int(q_flow * 0.5))
                 action_required = '⚠️ Pre-Alert Field Teams & Emergency Standby'
             else:
                 exposure_level = 'NOMINAL / SAFE'
-                badge_color = '#00C853'
+                badge_color = '#00E676'
                 lead_time_min = 240
-                action_required = '✅ Routine Monitoring'
+                action_required = '✅ Routine Baseline Monitoring'
             
             evaluated_assets.append({
                 **ast,
@@ -493,18 +444,13 @@ class GISAssetExposureEngine:
                 'action_required': action_required,
                 'estimated_discharge_m3_s': q_flow
             })
-            
         return evaluated_assets
 
 # ============================================================================
-# PHASE 3: HISTORICAL EVENT MEMORY LAYER (Slide 3 Memory Layer)
+# PHASE 3: HISTORICAL EVENT MEMORY LAYER
 # ============================================================================
 
 class HistoricalMemoryLayer:
-    """
-    Stores past extreme Himalayan disaster events (Kedarnath 2013, Beas 2023, Chamoli 2021)
-    and computes cosine similarity against live feature vectors for analog forecasting.
-    """
     def __init__(self):
         self.past_events = [
             {
@@ -514,7 +460,7 @@ class HistoricalMemoryLayer:
                 'cum_rain_mm': 115.0,
                 'soil_sat': 0.88,
                 'peak_discharge_m3_s': 285.0,
-                'outcome': 'Overtopped NH-3, damaged bridges, 4.5h lead time required.'
+                'outcome': 'Overtopped NH-3 highway, bridge abutment washaway, 4.5h lead time required.'
             },
             {
                 'event_name': '2013 Kedarnath Mandakini Surge (Uttarakhand)',
@@ -523,7 +469,7 @@ class HistoricalMemoryLayer:
                 'cum_rain_mm': 160.0,
                 'soil_sat': 0.95,
                 'peak_discharge_m3_s': 420.0,
-                'outcome': 'Massive debris flow + glacial moraine breach.'
+                'outcome': 'Catastrophic glacial moraine breach & debris flow.'
             },
             {
                 'event_name': '2021 Chamoli Flash Surge & Debris Flow (UK)',
@@ -535,13 +481,13 @@ class HistoricalMemoryLayer:
                 'outcome': 'Rock/ice avalanche surge into Rishiganga hydro project.'
             },
             {
-                'event_name': '2024 Dharamshala Localized Torrential Cloudburst (HP)',
+                'event_name': '2024 Dharamshala Localized Cloudburst (HP)',
                 'date': 'Aug 2024',
                 'peak_rain_mm_h': 32.0,
                 'cum_rain_mm': 78.0,
                 'soil_sat': 0.82,
                 'peak_discharge_m3_s': 140.0,
-                'outcome': 'Flash flooding in drainage channels, road blockages.'
+                'outcome': 'Drainage torrents overflowed, road blockages.'
             }
         ]
     
@@ -558,11 +504,7 @@ class HistoricalMemoryLayer:
             vec_hist = np.array([ev['peak_rain_mm_h'], ev['cum_rain_mm'], ev['soil_sat'] * 100.0])
             norm_c = np.linalg.norm(vec_cur)
             norm_h = np.linalg.norm(vec_hist)
-            if norm_c > 0 and norm_h > 0:
-                sim = np.dot(vec_cur, vec_hist) / (norm_c * norm_h)
-            else:
-                sim = 0.0
-            
+            sim = np.dot(vec_cur, vec_hist) / (norm_c * norm_h) if (norm_c > 0 and norm_h > 0) else 0.0
             if sim > best_score:
                 best_score = sim
                 best_match = ev
@@ -571,7 +513,7 @@ class HistoricalMemoryLayer:
         return best_match, similarity_pct
 
 # ============================================================================
-# PHASE 4: HRU CATCHMENT CASCADE & TOPOLOGY
+# PHASE 4: HRU CATCHMENT CASCADE
 # ============================================================================
 
 class HRUCascade:
@@ -593,7 +535,7 @@ class HRUCascade:
             'slope_deg': slope_deg,
             'curve_number': curve_number
         }
-        self.risk_propagated[node_id] = {'risk_level': 0, 'total_discharge': 0.0, 'state': 'GREEN'}
+        self.risk_propagated[node_id] = {'risk_level': 0, 'total_discharge': 0.0, 'state': 'GREEN (SAFE)'}
     
     def add_edge(self, upstream, downstream, lag_minutes=20):
         self.graph.add_edge(upstream, downstream, lag_minutes=lag_minutes)
@@ -602,17 +544,14 @@ class HRUCascade:
         self.graph.clear()
         self.node_props.clear()
         
-        if catchment_preset == "Kedarnath / Mandakini Basin":
-            base_lat, base_lon = 30.73, 79.06
-        else:
-            base_lat, base_lon = 32.18, 77.12
+        base_lat, base_lon = (30.73, 79.06) if catchment_preset == "Kedarnath / Mandakini Basin" else (32.18, 77.12)
             
         self.add_node('HRU-01', node_type='hru', name='Upper Ridge Catchment', lat=round(base_lat, 4), lon=round(base_lon, 4), area_km2=4.2, elevation_m=3200, slope_deg=34.0, curve_number=65)
         self.add_node('HRU-02', node_type='hru', name='Highland Slope', lat=round(base_lat - 0.04, 4), lon=round(base_lon + 0.02, 4), area_km2=5.8, elevation_m=2700, slope_deg=30.0, curve_number=72)
         self.add_node('HRU-03', node_type='hru', name='Tributary North Reach', lat=round(base_lat - 0.06, 4), lon=round(base_lon - 0.01, 4), area_km2=3.5, elevation_m=2450, slope_deg=26.0, curve_number=78)
         self.add_node('HRU-04', node_type='hru', name='Tributary South Reach', lat=round(base_lat - 0.09, 4), lon=round(base_lon + 0.04, 4), area_km2=4.1, elevation_m=2200, slope_deg=24.0, curve_number=75)
         self.add_node('HRU-05', node_type='hru', name='Valley Confluence Basin', lat=round(base_lat - 0.12, 4), lon=round(base_lon + 0.03, 4), area_km2=6.0, elevation_m=1850, slope_deg=18.0, curve_number=82)
-        self.add_node('Village-A', node_type='settlement', name='Downstream Village Settlement', lat=round(base_lat - 0.16, 4), lon=round(base_lon + 0.05, 4), area_km2=1.2, elevation_m=1600, slope_deg=12.0, curve_number=85)
+        self.add_node('Village-A', node_type='settlement', name='Downstream Settlement', lat=round(base_lat - 0.16, 4), lon=round(base_lon + 0.05, 4), area_km2=1.2, elevation_m=1600, slope_deg=12.0, curve_number=85)
         
         self.add_edge('HRU-01', 'HRU-02', lag_minutes=15)
         self.add_edge('HRU-02', 'HRU-03', lag_minutes=20)
@@ -631,21 +570,11 @@ class HRUCascade:
             local_risk = local_risk_data.get(node, {}).get('risk_level', 0)
             local_discharge = runoff_data.get(node, {}).get('discharge_m3_s', 0.0)
             
-            upstream_risks = []
-            upstream_discharges = []
+            upstream_risks = [result[pred]['risk_level'] for pred in self.graph.predecessors(node) if pred in result]
+            upstream_discharges = [result[pred]['total_discharge'] for pred in self.graph.predecessors(node) if pred in result]
             
-            for pred in self.graph.predecessors(node):
-                if pred in result:
-                    upstream_risks.append(result[pred]['risk_level'])
-                    upstream_discharges.append(result[pred]['total_discharge'])
-            
-            if upstream_risks:
-                max_upstream_risk = max(upstream_risks)
-                total_risk = max(local_risk, max_upstream_risk)
-                total_discharge = local_discharge + sum(upstream_discharges)
-            else:
-                total_risk = local_risk
-                total_discharge = local_discharge
+            total_risk = max(local_risk, max(upstream_risks)) if upstream_risks else local_risk
+            total_discharge = local_discharge + sum(upstream_discharges) if upstream_discharges else local_discharge
             
             risk_states = {0: 'GREEN (SAFE)', 1: 'WATCH (ELEVATED)', 2: 'RED (CRITICAL)'}
             result[node] = {
@@ -663,10 +592,7 @@ class HRUCascade:
         details = []
         for node_id, props in self.node_props.items():
             risk_info = self.risk_propagated.get(node_id, {'risk_level': 0, 'risk_state': 'GREEN (SAFE)', 'total_discharge': 0.0})
-            details.append({
-                **props,
-                **risk_info
-            })
+            details.append({**props, **risk_info})
         return details
 
 # ============================================================================
@@ -675,31 +601,18 @@ class HRUCascade:
 
 class DifferentialEngine:
     def __init__(self):
-        self.thresholds = {
-            'rainfall': 4.0,
-            'cml': 3.0,
-            'vibration': 0.35,
-            'river_level': 0.25,
-            'soil_saturation': 0.08
-        }
+        self.thresholds = {'rainfall': 4.0, 'cml': 3.0, 'vibration': 0.35, 'river_level': 0.25, 'soil_saturation': 0.08}
         self.window_size = 3
         self.flags = {}
     
     def detect_anomaly(self, signal_history, signal_name):
         if len(signal_history) < 2:
             return False, 0.0
-        
         window = np.array(signal_history[-self.window_size:], dtype=float)
         diffs = np.diff(window)
         avg_rate = float(np.mean(np.abs(diffs)))
         threshold = self.thresholds.get(signal_name, 1.0)
-        
-        if signal_name == 'cml':
-            cml_drop_rate = float(np.mean(-diffs))
-            is_anom = cml_drop_rate > threshold or avg_rate > (threshold * 1.5)
-        else:
-            is_anom = avg_rate > threshold
-        
+        is_anom = (float(np.mean(-diffs)) > threshold or avg_rate > threshold * 1.5) if signal_name == 'cml' else (avg_rate > threshold)
         return bool(is_anom), round(avg_rate, 3)
     
     def process_telemetry(self, history):
@@ -713,12 +626,7 @@ class DifferentialEngine:
                     anomalies[zone][signal_name] = {'anomalous': False, 'rate': 0.0, 'value': 0.0, 'threshold': self.thresholds.get(signal_name, 1.0)}
                     continue
                 is_anom, rate = self.detect_anomaly(values, signal_name)
-                anomalies[zone][signal_name] = {
-                    'anomalous': is_anom,
-                    'rate': rate,
-                    'value': round(values[-1], 3),
-                    'threshold': self.thresholds.get(signal_name, 1.0)
-                }
+                anomalies[zone][signal_name] = {'anomalous': is_anom, 'rate': rate, 'value': round(values[-1], 3), 'threshold': self.thresholds.get(signal_name, 1.0)}
         self.flags = anomalies
         return anomalies
 
@@ -741,7 +649,6 @@ class RunoffCalculator:
             area = props.get('area_km2', 4.0)
             cum_p = data.get('cum_rainfall', 0.0)
             rate_p = data.get('rainfall', 0.0)
-            
             q_cum = self.calculate_runoff(cum_p, cn)
             runoff_fraction = (q_cum / cum_p) if cum_p > 0.01 else 0.05
             q_rate_mm_h = rate_p * runoff_fraction
@@ -758,33 +665,94 @@ class RunoffCalculator:
         return results
 
 # ============================================================================
-# PHASE 6: STREAMLIT COMMAND & EARLY WARNING CONSOLE
+# PHASE 6: STREAMLIT COMMAND & EARLY WARNING CONSOLE (NEXT-GEN FRONTEND)
 # ============================================================================
 
 st.set_page_config(
-    page_title="AquaSentinel | SIH26192 Flash Flood Prediction",
+    page_title="AquaSentinel • SIH26192 Command Hub",
     page_icon="🌊",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Custom Styling
+# Custom High-Tech Command Center CSS
 st.markdown("""
 <style>
-    .sih-banner {
-        background: linear-gradient(90deg, #1A237E 0%, #0D47A1 50%, #01579B 100%);
-        padding: 14px 20px;
-        border-radius: 10px;
-        color: white;
-        margin-bottom: 15px;
-        border-left: 6px solid #FF9800;
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
+    
+    html, body, [class*="css"] {
+        font-family: 'Inter', sans-serif;
     }
+    
+    /* Global Glassmorphism Cards */
+    .glass-card {
+        background: rgba(18, 26, 43, 0.75);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
+        padding: 18px 20px;
+        margin-bottom: 12px;
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        transition: transform 0.2s ease, border-color 0.2s ease;
+    }
+    .glass-card:hover {
+        border-color: rgba(0, 230, 118, 0.3);
+        transform: translateY(-2px);
+    }
+    
+    /* SIH Header Banner */
+    .sih-header {
+        background: linear-gradient(135deg, #09122C 0%, #872341 50%, #BE3144 100%);
+        padding: 16px 24px;
+        border-radius: 14px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        box-shadow: 0 10px 40px rgba(190, 49, 68, 0.25);
+        margin-bottom: 18px;
+    }
+    
+    /* Glowing KPI Cards */
+    .kpi-box {
+        background: #0D1322;
+        border-radius: 10px;
+        padding: 14px 18px;
+        border-left: 4px solid #00E676;
+    }
+    .kpi-box.critical {
+        border-left: 4px solid #FF2E63;
+        box-shadow: 0 0 20px rgba(255, 46, 99, 0.2);
+    }
+    .kpi-box.watch {
+        border-left: 4px solid #FF9900;
+    }
+    
+    /* Tab Styling */
     .stTabs [data-baseweb="tab-list"] {
-        gap: 8px;
+        gap: 10px;
+        background: transparent;
     }
     .stTabs [data-baseweb="tab"] {
-        padding: 8px 16px;
-        border-radius: 6px;
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-weight: 600;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        transition: all 0.2s ease;
+    }
+    .stTabs [data-baseweb="tab"]:hover {
+        background: rgba(255, 255, 255, 0.08);
+    }
+    .stTabs [aria-selected="true"] {
+        background: linear-gradient(90deg, rgba(0, 230, 118, 0.2) 0%, rgba(0, 230, 118, 0.05) 100%) !important;
+        border-color: #00E676 !important;
+        color: #00E676 !important;
+    }
+    
+    /* Code/Mono font for metrics */
+    .mono-num {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 24px;
+        font-weight: 700;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -900,27 +868,32 @@ if st.session_state.steps_generated == 0:
     step_simulation(num_steps=5)
 
 # ----------------------------------------------------------------------------
-# SIDEBAR CONTROLS & API SETTINGS
+# SIDEBAR CONTROLS & API SETTINGS (POLISHED)
 # ----------------------------------------------------------------------------
 
 with st.sidebar:
-    st.image("https://img.icons8.com/fluency/96/tsunami.png", width=60)
-    st.title("AquaSentinel")
-    st.caption("SIH26192 • Flash Flood Prediction System")
-    st.caption("Team: **Error404 (R315-217)**")
-    st.divider()
+    st.markdown("""
+    <div style="text-align: center; padding: 10px 0 16px 0;">
+        <img src="https://img.icons8.com/fluency/96/tsunami.png" width="60" style="margin-bottom: 8px;"/>
+        <h2 style="margin: 0; font-size: 22px; font-weight: 800; letter-spacing: -0.5px;">AQUASENTINEL</h2>
+        <span style="font-size: 11px; background: rgba(0, 230, 118, 0.15); color: #00E676; padding: 3px 8px; border-radius: 4px; font-weight: 600;">
+            SIH26192 • TEAM ERROR404
+        </span>
+    </div>
+    """, unsafe_allow_html=True)
     
     # 1. OPERATION MODE
-    st.subheader("🌐 Data Ingestion Mode")
+    st.markdown("### 🌐 Data Ingestion Mode")
     mode_choice = st.radio(
         "Mode Selection",
         ["Live Real-Time API", "Hybrid (Live + Surge)", "Synthetic Simulation"],
-        index=["Live Real-Time API", "Hybrid (Live + Surge)", "Synthetic Simulation"].index(st.session_state.mode)
+        index=["Live Real-Time API", "Hybrid (Live + Surge)", "Synthetic Simulation"].index(st.session_state.mode),
+        label_visibility="collapsed"
     )
     st.session_state.mode = mode_choice
     
     # 2. API & CATCHMENT CONFIGURATION
-    with st.expander("🔑 API & Basin Configuration", expanded=(mode_choice != "Synthetic Simulation")):
+    with st.expander("⚙️ API & Catchment Settings", expanded=(mode_choice != "Synthetic Simulation")):
         provider_selected = st.selectbox(
             "API Provider",
             ["Open-Meteo", "OpenWeatherMap", "WeatherAPI.com"],
@@ -932,10 +905,9 @@ with st.sidebar:
             "API Key (Optional for Open-Meteo)",
             value=st.session_state.api_key,
             type="password",
-            help="Open-Meteo is free with no key. OpenWeatherMap/WeatherAPI require an API key."
+            help="Open-Meteo is free with no key required."
         )
         st.session_state.api_key = api_key_input
-        
         st.session_state.live_provider.provider = provider_selected
         st.session_state.live_provider.api_key = api_key_input
         
@@ -951,38 +923,32 @@ with st.sidebar:
             step_simulation(5)
             st.rerun()
 
+    # Status Pill
     if mode_choice != "Synthetic Simulation":
-        st.info(f"📡 Feed Status: `{st.session_state.live_provider.last_status}`")
+        st.success(f"● {st.session_state.live_provider.last_status}")
     else:
-        st.info("🧪 Feed Status: `Offline Synthetic Engine Active`")
+        st.info("● Local Synthetic Physics Engine Active")
 
     st.divider()
     
     # 3. SCENARIO / HAZARD INJECTION
-    st.subheader("🕹️ Simulation & Hazard Dispatch")
+    st.markdown("### ⚡ Hazard Surge Simulator")
     preset_choice = st.selectbox(
-        "Hazard Injection Scenario",
+        "Simulation Preset",
         ["Normal Day", "Sudden Cloudburst", "Flash Flood Building", "Sensor Glitch (Single Sensor Fault)"],
         index=["Normal Day", "Sudden Cloudburst", "Flash Flood Building", "Sensor Glitch (Single Sensor Fault)"].index(st.session_state.scenario_preset)
     )
     
     if preset_choice != st.session_state.scenario_preset:
         st.session_state.scenario_preset = preset_choice
-        if preset_choice == "Normal Day":
-            st.session_state.scenario_intensity = 0.0
-        elif preset_choice == "Sudden Cloudburst":
-            st.session_state.scenario_intensity = 0.9
-        elif preset_choice == "Sensor Glitch (Single Sensor Fault)":
-            st.session_state.scenario_intensity = 0.5
-        else:
-            st.session_state.scenario_intensity = 0.6
+        st.session_state.scenario_intensity = 0.0 if preset_choice == "Normal Day" else (0.9 if preset_choice == "Sudden Cloudburst" else 0.6)
     
     intensity = st.slider("Hazard Surge Intensity", 0.0, 1.0, float(st.session_state.scenario_intensity), 0.05)
     st.session_state.scenario_intensity = intensity
     
     col_s1, col_s2 = st.columns(2)
     with col_s1:
-        btn_label = "⚡ Fetch Live (+1m)" if mode_choice == "Live Real-Time API" else "▶ Step (+1m)"
+        btn_label = "⚡ Fetch Live" if mode_choice == "Live Real-Time API" else "▶ Step (+1m)"
         if st.button(btn_label, use_container_width=True):
             step_simulation(1)
             st.rerun()
@@ -991,7 +957,7 @@ with st.sidebar:
             step_simulation(10)
             st.rerun()
             
-    if st.button("🔄 Reset Telemetry Buffer", use_container_width=True):
+    if st.button("🔄 Reset Telemetry", use_container_width=True):
         st.session_state.simulator = TelemetrySimulator(zones=st.session_state.zones)
         st.session_state.cascade = HRUCascade()
         st.session_state.cascade.create_catchment(st.session_state.catchment_preset)
@@ -1003,57 +969,89 @@ with st.sidebar:
         step_simulation(5)
         st.rerun()
         
-    st.divider()
-    st.metric("Simulation Clock", f"{st.session_state.steps_generated} mins")
-    active_reds = sum(1 for r in st.session_state.risk_scores.values() if r.get('risk_level') == 2)
-    if active_reds > 0:
-        st.error(f"🚨 CRITICAL ALERTS: {active_reds} ZONES")
-    else:
-        st.success("✅ ALL STREAMS NOMINAL")
+    st.caption(f"⏱️ Telemetry Clock: **+{st.session_state.steps_generated} mins**")
 
 # ----------------------------------------------------------------------------
-# HEADER & SIH BANNER
+# HEADER & COMMAND CENTER BANNER
 # ----------------------------------------------------------------------------
 
 st.markdown("""
-<div class="sih-banner">
-    <div style="display: flex; justify-content: space-between; align-items: center;">
+<div class="sih-header">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
         <div>
-            <h3 style="margin: 0; color: #FFF;">🌊 SMART INDIA HACKATHON 2026 • PS ID: SIH26192</h3>
-            <p style="margin: 4px 0 0 0; color: #E0E0E0; font-size: 14px;">
-                <b>Title:</b> Flash Flood Prediction System for Hilly Regions using Multi-Source Data | <b>Theme:</b> Disaster Management | <b>Team:</b> Error404 (R315-217)
-            </p>
+            <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: #FFA726; font-weight: 700; margin-bottom: 2px;">
+                NATIONAL DISASTER MANAGEMENT PLATFORM • SMART INDIA HACKATHON 2026
+            </div>
+            <h2 style="margin: 0; color: #FFFFFF; font-size: 24px; font-weight: 800; letter-spacing: -0.5px;">
+                🌊 AquaSentinel — Multi-Source Flash Flood Early Warning System
+            </h2>
+            <div style="color: #E0E0E0; font-size: 13px; margin-top: 4px;">
+                <b>PS ID:</b> SIH26192 • <b>Theme:</b> Disaster Management • <b>Team:</b> Error404 (ID: R315-217)
+            </div>
         </div>
-        <div style="text-align: right;">
-            <span style="background: #FF9800; color: #000; padding: 4px 10px; border-radius: 5px; font-weight: bold; font-size: 12px;">SIH 2026 EDITION</span>
+        <div>
+            <span style="background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.2); color: #FFF; padding: 6px 14px; border-radius: 8px; font-weight: 700; font-size: 13px;">
+                🟢 13+ HILL STATES PROTOCOL
+            </span>
         </div>
     </div>
 </div>
 """, unsafe_allow_html=True)
 
-# Executive KPI Metrics
-col_h1, col_h2, col_h3, col_h4 = st.columns([3, 1, 1, 1])
-with col_h1:
-    source_label = f"Live Data ({st.session_state.api_provider_name})" if st.session_state.mode != "Synthetic Simulation" else "Synthetic Simulator"
-    st.markdown(f"**Mode:** `{st.session_state.mode}` • **Feed:** `{source_label}` • **Basin:** `{st.session_state.catchment_preset}`")
+# ----------------------------------------------------------------------------
+# EXECUTIVE KPI STATS CARDS
+# ----------------------------------------------------------------------------
 
-with col_h2:
-    max_risk = max((r.get('risk_level', 0) for r in st.session_state.risk_scores.values()), default=0)
-    badge = "🟢 NORMAL" if max_risk == 0 else ("🟡 WATCH" if max_risk == 1 else "🔴 CRITICAL")
-    st.metric("Watershed Threat", badge)
+col_k1, col_k2, col_k3, col_k4 = st.columns(4)
 
-with col_h3:
-    total_q = sum(r.get('discharge_m3_s', 0.0) for r in st.session_state.runoff_results.values())
-    st.metric("Peak Basin Q", f"{total_q:.1f} m³/s")
+max_risk = max((r.get('risk_level', 0) for r in st.session_state.risk_scores.values()), default=0)
+active_reds = sum(1 for r in st.session_state.risk_scores.values() if r.get('risk_level') == 2)
+total_q = sum(r.get('discharge_m3_s', 0.0) for r in st.session_state.runoff_results.values())
+min_lead_time = min((a.get('lead_time_min', 240) for a in st.session_state.asset_exposures), default=240)
 
-with col_h4:
-    critical_assets_count = sum(1 for a in st.session_state.asset_exposures if 'CRITICAL' in a.get('exposure_level', ''))
-    st.metric("Exposed Assets", f"{critical_assets_count} High Risk")
+with col_k1:
+    kpi_cls = "critical" if max_risk == 2 else ("watch" if max_risk == 1 else "")
+    badge_label = "🔴 CRITICAL ALERT" if max_risk == 2 else ("🟡 WATCH" if max_risk == 1 else "🟢 ALL NOMINAL")
+    st.markdown(f"""
+    <div class="kpi-box {kpi_cls}">
+        <div style="font-size: 12px; color: #8F9CAE; text-transform: uppercase; font-weight: 600;">Threat Status</div>
+        <div class="mono-num" style="color: {'#FF2E63' if max_risk==2 else ('#FF9900' if max_risk==1 else '#00E676')};">{badge_label}</div>
+        <div style="font-size: 11px; color: #B0BEC5; margin-top: 4px;">{active_reds} Drainage Reaches in RED</div>
+    </div>
+    """, unsafe_allow_html=True)
 
-st.divider()
+with col_k2:
+    st.markdown(f"""
+    <div class="kpi-box">
+        <div style="font-size: 12px; color: #8F9CAE; text-transform: uppercase; font-weight: 600;">Total Basin Discharge (Q)</div>
+        <div class="mono-num" style="color: #00E5FF;">{total_q:.1f} <span style="font-size: 14px;">m³/s</span></div>
+        <div style="font-size: 11px; color: #B0BEC5; margin-top: 4px;">SCS-CN Runoff Model</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+with col_k3:
+    st.markdown(f"""
+    <div class="kpi-box {'critical' if min_lead_time <= 45 else ''}">
+        <div style="font-size: 12px; color: #8F9CAE; text-transform: uppercase; font-weight: 600;">Actionable Evacuation Lead Time</div>
+        <div class="mono-num" style="color: {'#FF2E63' if min_lead_time<=45 else '#00E676'};">{min_lead_time} <span style="font-size: 14px;">mins</span></div>
+        <div style="font-size: 11px; color: #B0BEC5; margin-top: 4px;">Downstream Settlement Window</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+with col_k4:
+    critical_ast = sum(1 for a in st.session_state.asset_exposures if 'CRITICAL' in a.get('exposure_level', ''))
+    st.markdown(f"""
+    <div class="kpi-box {'critical' if critical_ast > 0 else ''}">
+        <div style="font-size: 12px; color: #8F9CAE; text-transform: uppercase; font-weight: 600;">Exposed Critical Assets</div>
+        <div class="mono-num" style="color: {'#FF2E63' if critical_ast>0 else '#00E676'};">{critical_ast} <span style="font-size: 14px;">High Risk</span></div>
+        <div style="font-size: 11px; color: #B0BEC5; margin-top: 4px;">NH-3 Highway & Bridges</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
 
 # ----------------------------------------------------------------------------
-# TABS INTERFACE (Aligned with SIH Slides 2, 3, 4, 5, 6)
+# TABS INTERFACE (NEXT-GEN FRONTEND)
 # ----------------------------------------------------------------------------
 
 tab_gis, tab_ml_risk, tab_assets, tab_telemetry, tab_memory, tab_ndrf = st.tabs([
@@ -1066,7 +1064,7 @@ tab_gis, tab_ml_risk, tab_assets, tab_telemetry, tab_memory, tab_ndrf = st.tabs(
 ])
 
 # ----------------------------------------------------------------------------
-# TAB 1: INTERACTIVE GIS RISK MAP (FREE TILES & MULTI-LAYER OVERLAY)
+# TAB 1: INTERACTIVE GIS RISK MAP
 # ----------------------------------------------------------------------------
 with tab_gis:
     st.subheader("Spatial Risk Grid & Critical Infrastructure Overlay")
@@ -1079,31 +1077,27 @@ with tab_gis:
         avg_lat = np.mean([n['lat'] for n in nodes])
         avg_lon = np.mean([n['lon'] for n in nodes])
         
-        # 1. Base Map (No API Key Required)
         m = folium.Map(location=[avg_lat, avg_lon], zoom_start=12, tiles="OpenStreetMap")
         
-        # 2. Free High-Resolution Satellite View Layer
         folium.TileLayer(
             tiles='https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
             attr='Esri World Imagery',
             name='🛰️ Satellite View'
         ).add_to(m)
         
-        # 3. Free Topographic Elevation Layer
         folium.TileLayer(
             tiles='https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
             attr='OpenTopoMap',
             name='⛰️ Topo Terrain (DEM)'
         ).add_to(m)
         
-        # Draw directed flow channels (Edges)
+        # Draw flow channels
         for u, v, data in cascade.graph.edges(data=True):
             u_node = cascade.node_props[u]
             v_node = cascade.node_props[v]
             lag = data.get('lag_minutes', 20)
-            
             u_risk = cascade.risk_propagated.get(u, {}).get('risk_level', 0)
-            line_color = '#00C853' if u_risk == 0 else ('#FFC107' if u_risk == 1 else '#D32F2F')
+            line_color = '#00E676' if u_risk == 0 else ('#FF9900' if u_risk == 1 else '#FF2E63')
             
             folium.PolyLine(
                 locations=[[u_node['lat'], u_node['lon']], [v_node['lat'], v_node['lon']]],
@@ -1111,10 +1105,10 @@ with tab_gis:
                 weight=5,
                 opacity=0.9,
                 dash_array='6, 10' if u_risk > 0 else None,
-                tooltip=f"Drainage Reach {u} ➔ {v} (Routing Lag: {lag} min)"
+                tooltip=f"Drainage Channel {u} ➔ {v} (Routing Lag: {lag} min)"
             ).add_to(m)
         
-        # Add Catchment Nodes
+        # Add Nodes
         for n in nodes:
             r_level = n.get('risk_level', 0)
             color_name = 'green' if r_level == 0 else ('orange' if r_level == 1 else 'red')
@@ -1141,17 +1135,15 @@ with tab_gis:
                 folium.Circle(
                     location=[n['lat'], n['lon']],
                     radius=1200,
-                    color='#D32F2F',
+                    color='#FF2E63',
                     fill=True,
                     fill_opacity=0.3,
                     popup=f"Critical Inundation Hazard Buffer: {n['id']}"
                 ).add_to(m)
         
-        # Add Critical Infrastructure Assets
+        # Add Assets
         for ast in st.session_state.asset_exposures:
             ast_color = 'red' if 'CRITICAL' in ast['exposure_level'] else ('orange' if 'MODERATE' in ast['exposure_level'] else 'blue')
-            ast_icon = 'road' if ast['type'] == 'highway' else ('bridge' if ast['type'] == 'bridge' else 'flash')
-            
             folium.Marker(
                 location=[ast['lat'], ast['lon']],
                 popup=folium.Popup(f"<b>{ast['name']}</b><br>Type: {ast['type'].upper()}<br>Exposure: <b>{ast['exposure_level']}</b><br>Lead Time: {ast['lead_time_min']} min", max_width=250),
@@ -1163,7 +1155,7 @@ with tab_gis:
         st_folium(m, width="100%", height=520)
 
 # ----------------------------------------------------------------------------
-# TAB 2: XGBOOST / GBDT AI RISK ENGINE (Slide 2 & 3)
+# TAB 2: XGBOOST AI RISK ENGINE
 # ----------------------------------------------------------------------------
 with tab_ml_risk:
     st.subheader("AI Flood Risk Scoring Engine (XGBoost / LightGBM)")
@@ -1177,37 +1169,38 @@ with tab_ml_risk:
             score_val = r_data.get('risk_score_pct', 0.0)
             conf_val = r_data.get('confidence_pct', 90.0)
             sigma_val = r_data.get('uncertainty_sigma', 5.0)
-            color = r_data.get('color', '#00C853')
+            color = r_data.get('color', '#00E676')
             
             fig_gauge = go.Figure(go.Indicator(
                 mode="gauge+number",
                 value=score_val,
                 domain={'x': [0, 1], 'y': [0, 1]},
-                title={'text': f"<b>{zone}</b><br><span style='font-size:11px'>Confidence: {conf_val}% (±{sigma_val}%)</span>"},
+                title={'text': f"<b>{zone}</b><br><span style='font-size:11px; color:#A0AEC0;'>Confidence: {conf_val}% (±{sigma_val}%)</span>"},
                 gauge={
-                    'axis': {'range': [0, 100]},
+                    'axis': {'range': [0, 100], 'tickcolor': '#718096'},
                     'bar': {'color': color},
+                    'bgcolor': 'rgba(255,255,255,0.05)',
                     'steps': [
-                        {'range': [0, 30], 'color': "rgba(0, 200, 83, 0.2)"},
-                        {'range': [30, 60], 'color': "rgba(255, 193, 7, 0.2)"},
-                        {'range': [60, 100], 'color': "rgba(211, 47, 47, 0.2)"}
+                        {'range': [0, 30], 'color': "rgba(0, 230, 118, 0.15)"},
+                        {'range': [30, 60], 'color': "rgba(255, 153, 0, 0.15)"},
+                        {'range': [60, 100], 'color': "rgba(255, 46, 99, 0.15)"}
                     ],
-                    'threshold': {'line': {'color': "red", 'width': 4}, 'thickness': 0.75, 'value': 60}
+                    'threshold': {'line': {'color': "#FF2E63", 'width': 3}, 'thickness': 0.75, 'value': 60}
                 }
             ))
-            fig_gauge.update_layout(height=230, margin=dict(l=10, r=10, t=50, b=10))
+            fig_gauge.update_layout(height=230, margin=dict(l=10, r=10, t=50, b=10), paper_bgcolor='rgba(0,0,0,0)')
             st.plotly_chart(fig_gauge, use_container_width=True)
             
-            st.markdown(f"**State:** `{r_data.get('risk_state')}`")
-            st.caption(f"Consensus: `{r_data.get('sensor_consensus')}`")
+            st.markdown(f"**Threat:** `{r_data.get('risk_state')}`")
+            st.caption(f"Sensor Agreement: `{r_data.get('sensor_consensus')}`")
             
-            # Feature Importance Factors
-            st.markdown("##### 🔍 Top Risk Drivers")
+            # Top drivers
+            st.markdown("##### 🔍 Top Drivers")
             for factor, imp in r_data.get('top_factors', []):
-                st.caption(f"• **{factor}**: `{imp}%` impact")
+                st.caption(f"• **{factor}**: `{imp}%`")
 
 # ----------------------------------------------------------------------------
-# TAB 3: CRITICAL ASSET EXPOSURE & IMPACT ENGINE (Slide 2 & 3)
+# TAB 3: CRITICAL ASSET EXPOSURE & IMPACT ENGINE
 # ----------------------------------------------------------------------------
 with tab_assets:
     st.subheader("Critical Infrastructure Exposure & Lead-Time Matrix")
@@ -1216,18 +1209,27 @@ with tab_assets:
     asset_df = pd.DataFrame(st.session_state.asset_exposures)
     if not asset_df.empty:
         for idx, row in asset_df.iterrows():
-            col_a1, col_a2, col_a3, col_a4 = st.columns([3, 2, 2, 3])
-            with col_a1:
-                st.markdown(f"**{row['name']}**")
-                st.caption(f"Type: `{row['type'].upper()}` | Nearest Node: `{row['nearest_hru']}`")
-            with col_a2:
-                st.markdown(f"**Exposure:** <span style='color:{row['badge_color']}; font-weight:bold;'>{row['exposure_level']}</span>", unsafe_allow_html=True)
-                st.caption(f"Criticality: {row['criticality']}")
-            with col_a3:
-                st.metric("Estimated Lead Time", f"{row['lead_time_min']} mins")
-            with col_a4:
-                st.markdown(f"**Action Protocol:**\n{row['action_required']}")
-            st.divider()
+            st.markdown(f"""
+            <div class="glass-card" style="border-left: 5px solid {row['badge_color']};">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+                    <div>
+                        <h4 style="margin: 0; color: #FFF;">{row['name']}</h4>
+                        <span style="font-size: 12px; color: #A0AEC0;">TYPE: {row['type'].upper()} • NEAREST HRU: {row['nearest_hru']} • CRITICALITY: {row['criticality']}</span>
+                    </div>
+                    <div style="text-align: right;">
+                        <span style="background: {row['badge_color']}; color: #FFF; padding: 4px 10px; border-radius: 6px; font-weight: 700; font-size: 12px;">
+                            {row['exposure_level']}
+                        </span>
+                        <div style="font-size: 18px; font-weight: 800; color: #00E5FF; margin-top: 4px;">
+                            ⏱️ {row['lead_time_min']} MINS LEAD TIME
+                        </div>
+                    </div>
+                </div>
+                <div style="margin-top: 10px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.06); font-size: 13px; color: #E2E8F0;">
+                    <b>Action Protocol:</b> {row['action_required']}
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
 
 # ----------------------------------------------------------------------------
 # TAB 4: MULTI-SOURCE TELEMETRY STREAMS
@@ -1263,7 +1265,7 @@ with tab_telemetry:
             horizontal_spacing=0.08
         )
         
-        colors = ['#00E5FF', '#76FF03', '#FFD600', '#FF3D00', '#D500F9']
+        colors = ['#00E5FF', '#76FF03', '#FFD600', '#FF2E63', '#D500F9']
         for idx, zone in enumerate(selected_zone_plot):
             z_data = filtered_df[filtered_df['zone'] == zone]
             color = colors[idx % len(colors)]
@@ -1272,11 +1274,11 @@ with tab_telemetry:
             fig.add_trace(go.Scatter(x=z_data['time'], y=z_data['river_level'], name=zone, line=dict(color=color), legendgroup=zone, showlegend=False), row=2, col=1)
             fig.add_trace(go.Scatter(x=z_data['time'], y=z_data['vibration'], name=zone, line=dict(color=color), legendgroup=zone, showlegend=False), row=2, col=2)
         
-        fig.update_layout(height=500, margin=dict(l=20, r=20, t=40, b=20), hovermode="x unified")
+        fig.update_layout(height=500, margin=dict(l=20, r=20, t=40, b=20), hovermode="x unified", paper_bgcolor='rgba(0,0,0,0)')
         st.plotly_chart(fig, use_container_width=True)
 
 # ----------------------------------------------------------------------------
-# TAB 5: HISTORICAL MEMORY & ANALOG MATCHING (Slide 3 Memory Layer)
+# TAB 5: HISTORICAL MEMORY & ANALOG MATCHING
 # ----------------------------------------------------------------------------
 with tab_memory:
     st.subheader("Historical Event Memory Layer (Case-Based Reasoning)")
@@ -1287,24 +1289,35 @@ with tab_memory:
     
     col_m1, col_m2 = st.columns([1, 2])
     with col_m1:
-        st.metric("Live Analog Similarity", f"{similarity_pct}%", delta="High Correlation" if similarity_pct > 75 else "Low Match")
-        st.caption(f"Compared with live signature: Rain {current_upper_hru.get('rainfall', 0):.1f} mm/h, Soil {current_upper_hru.get('soil_saturation', 0):.2f}")
+        st.markdown(f"""
+        <div class="glass-card">
+            <div style="font-size: 12px; color: #8F9CAE; text-transform: uppercase; font-weight: 600;">Live Analog Match</div>
+            <div class="mono-num" style="color: {'#FF2E63' if similarity_pct > 75 else '#00E676'}; font-size: 32px;">{similarity_pct}%</div>
+            <div style="font-size: 12px; color: #A0AEC0; margin-top: 6px;">
+                Signature: <b>{current_upper_hru.get('rainfall', 0):.1f} mm/h</b> | Soil Sat: <b>{current_upper_hru.get('soil_saturation', 0):.2f}</b>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
     
     with col_m2:
         if analog_event:
-            st.info(f"""
-            ### 🏛️ Closest Historical Disaster Signature: **{analog_event['event_name']}**
-            - **Historical Date:** `{analog_event['date']}`
-            - **Benchmark Peak Rainfall:** `{analog_event['peak_rain_mm_h']} mm/h` (Cumulative: `{analog_event['cum_rain_mm']} mm`)
-            - **Historical Peak Discharge:** `{analog_event['peak_discharge_m3_s']} m³/s`
-            - **Historical Impact & Lessons Learned:** {analog_event['outcome']}
-            """)
+            st.markdown(f"""
+            <div class="glass-card" style="border-left: 5px solid #00E5FF;">
+                <h4 style="margin: 0; color: #00E5FF;">🏛️ Closest Historical Signature: {analog_event['event_name']}</h4>
+                <div style="font-size: 13px; color: #E2E8F0; margin-top: 8px;">
+                    • <b>Event Date:</b> {analog_event['date']}<br>
+                    • <b>Benchmark Peak Rainfall:</b> {analog_event['peak_rain_mm_h']} mm/h (Cumulative: {analog_event['cum_rain_mm']} mm)<br>
+                    • <b>Historical Peak Discharge:</b> {analog_event['peak_discharge_m3_s']} m³/s<br>
+                    • <b>Historical Outcome:</b> {analog_event['outcome']}
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
 
     st.markdown("#### 📚 Historical Extreme Events Repository")
     st.dataframe(pd.DataFrame(st.session_state.memory_layer.past_events), use_container_width=True)
 
 # ----------------------------------------------------------------------------
-# TAB 6: NDRF / SDMA EARLY WARNING DISPATCH (Slide 2, 4 & 5)
+# TAB 6: NDRF / SDMA EARLY WARNING DISPATCH
 # ----------------------------------------------------------------------------
 with tab_ndrf:
     st.subheader("Official Disaster Management Early Warning Console")
@@ -1313,26 +1326,33 @@ with tab_ndrf:
     high_threat_nodes = [nid for nid, r in st.session_state.cascade.risk_propagated.items() if r.get('risk_level') == 2]
     
     if high_threat_nodes:
-        st.error(f"""
-        ### 🚨 HIGH-PRIORITY FLASH FLOOD EVACUATION BULLETIN
-        **Issuing Authority:** AquaSentinel SIH26192 Command Hub  
-        **Target Zones:** `{', '.join(high_threat_nodes)}`  
-        **Threat Level:** 🔴 RED / CRITICAL INUNDATION IMMINENT  
-        
-        **Mandatory Operational Directives:**
-        1. **Evacuation:** Immediately mobilize NDRF 14th Bn / SDRF quick-response teams to downstream hamlets and Village-A.
-        2. **Highway Closure:** Enforce immediate vehicular traffic stoppage on **NH-3** and **NH-7** riverbed vulnerable stretches.
-        3. **Dam Buffering:** Signal Larji / Pandoh Dam control rooms to initiate emergency reservoir sluice pre-drawdown.
-        4. **Public Broadcast:** Trigger automated acoustic warning sirens and geo-targeted cellular SMS alerts.
-        """)
+        st.markdown(f"""
+        <div class="glass-card" style="border-left: 6px solid #FF2E63; background: rgba(255, 46, 99, 0.08);">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="margin: 0; color: #FF2E63;">🚨 HIGH-PRIORITY FLASH FLOOD EVACUATION BULLETIN</h3>
+                <span style="background: #FF2E63; color: #FFF; padding: 4px 10px; border-radius: 4px; font-weight: 700; font-size: 12px;">IMMEDIATE ACTION</span>
+            </div>
+            <p style="margin: 8px 0; color: #E2E8F0; font-size: 14px;">
+                <b>Issuing Authority:</b> AquaSentinel SIH26192 Command Hub | <b>Target Reaches:</b> <code>{', '.join(high_threat_nodes)}</code>
+            </p>
+            <div style="margin-top: 10px; font-size: 13px; line-height: 1.6; color: #F7FAFC;">
+                <b>Mandatory Operational Directives:</b><br>
+                1. <b>Evacuation:</b> Immediately mobilize NDRF 14th Bn / SDRF quick-response teams to downstream hamlets and Village-A.<br>
+                2. <b>Highway Closure:</b> Enforce immediate vehicular traffic stoppage on <b>NH-3</b> and <b>NH-7</b> riverbed vulnerable stretches.<br>
+                3. <b>Dam Buffering:</b> Signal Larji / Pandoh Dam control rooms to initiate emergency reservoir sluice pre-drawdown.<br>
+                4. <b>Public Broadcast:</b> Trigger automated acoustic warning sirens and geo-targeted cellular SMS alerts.
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
     else:
-        st.success("""
-        ### ✅ STATUS GREEN: ROUTINE BASELINE MONITORING
-        **Issuing Authority:** AquaSentinel SIH26192 Command Hub  
-        **Status:** All sensor streams and catchment drainage nodes operating within standard safety envelopes.
-        - Telemetry sampling active at nominal 1-minute resolution.
-        - Next automated hydrometeorological forecast update in 15 minutes.
-        """)
+        st.markdown("""
+        <div class="glass-card" style="border-left: 6px solid #00E676; background: rgba(0, 230, 118, 0.05);">
+            <h3 style="margin: 0; color: #00E676;">✅ STATUS GREEN: ALL REPOSITORY STREAMS NOMINAL</h3>
+            <p style="margin: 6px 0 0 0; color: #CBD5E0; font-size: 13px;">
+                All hydrometeorological channels operating within 95% confidence safety bounds. Sampling active at 1-minute resolution.
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
 
 # ----------------------------------------------------------------------------
 # FOOTER
